@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import FileInput from "./FileInput";
+import DocumentReader from "./components/DocumentReader";
+import FileInput from "./components/FileInput";
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -17,6 +18,7 @@ function App() {
     <div className="App">
       <h1>Hello World</h1>
       <FileInput handleInputChange={handleInputChange} />
+      {file && <DocumentReader file={file} />}
     </div>
   );
 }
