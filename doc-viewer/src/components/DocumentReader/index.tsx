@@ -1,30 +1,39 @@
-import React, { ReactElement } from "react";
+import { ReactElement, useEffect, useState } from "react";
 import PdfReader from "../PdfReader";
+import EpubReader from "../EpubReader";
 
 interface Props {
   file: File;
 }
 
+enum Viewer {
+  PdfViewer,
+  EpubViewer,
+}
+
 export default function DocumentViewer({ file }: Props): ReactElement {
-  const viewer = selectViewer(file);
+  const [viewer, setViewer] = useState<Viewer | null>();
+
+  useEffect(() => {
+    const selectViewer = () => {
+      if (file.type === "application/pdf") {
+        setViewer(Viewer.PdfViewer);
+      } else if (file.type === "application/epub+zip") {
+        setViewer(Viewer.EpubViewer);
+      } else {
+        setViewer(null);
+      }
+    };
+    selectViewer();
+  }, [file]);
 
   return (
     <>
-      <h3>Doc viewer</h3>
-      {viewer}
+      {viewer === Viewer.PdfViewer ? (
+        <PdfReader file={file} />
+      ) : (
+        <EpubReader file={file} />
+      )}
     </>
   );
-}
-
-function selectViewer(file: File) {
-  console.log("selectViwer", file);
-  let viewer: any = null;
-  if (file.type === "application/pdf") {
-    viewer = <PdfReader file={file} />;
-  } else if (file.type === "application/epub+zip") {
-    viewer = "epub";
-  } else {
-    viewer = null;
-  }
-  return viewer;
 }
