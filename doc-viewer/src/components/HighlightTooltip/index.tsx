@@ -1,96 +1,77 @@
-import React, { Component } from "react";
-
-import "./HighlightTooltip.css";
-
-interface State {
-  compact: boolean;
-  text: string;
-  emoji: string;
-}
+import React, { ReactElement } from "react";
+import { ColorCircle } from "../ColorCircle";
 
 interface Props {
-  onConfirm: (comment: { text: string; emoji: string }) => void;
-  onOpen: () => void;
-  onUpdate?: () => void;
+  highlightColorPickers: Array<ReactElement>;
+  menuItems: Array<ReactElement>;
 }
 
-export class HighlightTooltip extends Component<Props, State> {
-  state: State = {
-    compact: true,
-    text: "",
-    emoji: "",
-  };
+const HighlightTooltip = ({ highlightColorPickers, menuItems }: Props) => {
+  return (
+    <div className="bg-gray-100 rounded-lg p-2 max-w-sm flex flex-col">
+      <div className="flex flex-row space-x-2">{highlightColorPickers}</div>
+      <div className="border-t-2 my-3" />
+      <div className="space-y-1">{menuItems}</div>
+    </div>
+  );
+};
 
-  // for TipContainer
-  componentDidUpdate(nextProps: Props, nextState: State) {
-    const { onUpdate } = this.props;
+const MenuItem = ({ text, onClick }: { text: string; onClick: () => void }) => (
+  <div className="cursor-pointer" onClick={onClick}>
+    {text}
+  </div>
+);
 
-    if (onUpdate && this.state.compact !== nextState.compact) {
-      onUpdate();
-    }
-  }
+interface DefaultHighlightTooltipProps {
+  highlightColors: Array<string>;
+  currentHighlightColor: string;
+  handleAddNote: () => void;
+  handleDeleteNote: () => void;
+  handleHighlightColorClick: (color: string, active: boolean) => void;
+  menuItems: Array<ReactElement>;
+}
 
-  render() {
-    const { onConfirm, onOpen } = this.props;
-    const { compact, text, emoji } = this.state;
+const DefaultHighlightTooltip = (props: DefaultHighlightTooltipProps) => {
+  const {
+    highlightColors,
+    currentHighlightColor,
+    handleAddNote,
+    handleDeleteNote,
+    handleHighlightColorClick,
+  }: DefaultHighlightTooltipProps = props;
 
+  const highlightColorPickers = highlightColors.map((color) => {
+    const isActive: boolean = color === currentHighlightColor;
     return (
-      <div className="Tip">
-        {compact ? (
-          <div
-            className="Tip__compact"
-            onClick={() => {
-              onOpen();
-              this.setState({ compact: false });
-            }}
-          >
-            Add highlight
-          </div>
-        ) : (
-          <form
-            className="Tip__card"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onConfirm({ text, emoji });
-            }}
-          >
-            <div>
-              <textarea
-                placeholder="Your comment"
-                autoFocus
-                value={text}
-                onChange={(event) =>
-                  this.setState({ text: event.target.value })
-                }
-                ref={(node) => {
-                  if (node) {
-                    node.focus();
-                  }
-                }}
-              />
-              <div>
-                {["💩", "😱", "😍", "🔥", "😳", "⚠️"].map((_emoji) => (
-                  <label key={_emoji}>
-                    <input
-                      checked={emoji === _emoji}
-                      type="radio"
-                      name="emoji"
-                      value={_emoji}
-                      onChange={(event) =>
-                        this.setState({ emoji: event.target.value })
-                      }
-                    />
-                    {_emoji}
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div>
-              <input type="submit" value="Save" />
-            </div>
-          </form>
-        )}
-      </div>
+      <ColorCircle
+        color={color}
+        key={color}
+        active={isActive}
+        size={2}
+        onClick={() => handleHighlightColorClick(color, isActive)}
+      />
     );
-  }
-}
+  });
+
+  const defaultMenuItems: Array<ReactElement> = [
+    {
+      text: "Add note",
+      onClick: handleAddNote,
+    },
+    {
+      text: "Delete note",
+      onClick: handleDeleteNote,
+    },
+  ].map((item) => (
+    <MenuItem text={item.text} key={item.text} onClick={item.onClick} />
+  ));
+
+  return (
+    <HighlightTooltip
+      highlightColorPickers={highlightColorPickers}
+      menuItems={defaultMenuItems}
+    />
+  );
+};
+
+export { DefaultHighlightTooltip as HighlightTooltip };
