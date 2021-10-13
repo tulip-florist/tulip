@@ -1,36 +1,44 @@
 import { ReactElement, useEffect, useState } from "react";
 import PdfReader from "../PdfReader";
 import EpubReader from "../EpubReader";
+import { Annotation } from "../../types/types";
 
 interface Props {
   file: File;
+  handleCreateAnnotation: (annotation: Annotation) => void;
 }
 
-enum Viewer {
-  PdfViewer,
-  EpubViewer,
+enum Reader {
+  PdfReader,
+  EpubReader,
 }
 
-export default function DocumentViewer({ file }: Props): ReactElement {
-  const [viewer, setViewer] = useState<Viewer | null>();
+export default function DocumentReader({
+  file,
+  handleCreateAnnotation,
+}: Props): ReactElement {
+  const [reader, setReader] = useState<Reader | null>();
 
   useEffect(() => {
-    const selectViewer = () => {
+    const selectReader = () => {
       if (file.type === "application/pdf") {
-        setViewer(Viewer.PdfViewer);
+        setReader(Reader.PdfReader);
       } else if (file.type === "application/epub+zip") {
-        setViewer(Viewer.EpubViewer);
+        setReader(Reader.EpubReader);
       } else {
-        setViewer(null);
+        setReader(null);
       }
     };
-    selectViewer();
+    selectReader();
   }, [file]);
 
   return (
     <>
-      {viewer === Viewer.PdfViewer ? (
-        <PdfReader file={file} />
+      {reader === Reader.PdfReader ? (
+        <PdfReader
+          file={file}
+          handleCreateAnnotation={handleCreateAnnotation}
+        />
       ) : (
         <EpubReader file={file} />
       )}

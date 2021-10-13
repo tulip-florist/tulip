@@ -25,10 +25,9 @@ const MenuItem = ({ text, onClick }: { text: string; onClick: () => void }) => (
 interface DefaultHighlightTooltipProps {
   highlightColors: Array<string>;
   currentHighlightColor: string;
-  handleAddNote: () => void;
+  handleAddNote: (...args: any[]) => void;
   handleDeleteNote: () => void;
   handleHighlightColorClick: (color: string, active: boolean) => void;
-  menuItems: Array<ReactElement>;
 }
 
 const DefaultHighlightTooltip = (props: DefaultHighlightTooltipProps) => {

@@ -16,6 +16,8 @@ import { Spinner } from "./Spinner";
 import { Sidebar } from "./Sidebar";
 
 import "../../style/App.css";
+import { Annotation } from "../../types/types";
+import { HighlightTooltip } from "../HighlightTooltip";
 
 const testHighlights: Record<string, Array<IHighlight>> = _testHighlights;
 
@@ -26,6 +28,7 @@ interface State {
 
 interface Props {
   file: File;
+  handleCreateAnnotation: (annotation: Annotation) => void;
 }
 
 const getNextId = () => String(Math.random()).slice(2);
@@ -116,6 +119,16 @@ class PdfViewer extends Component<Props, State> {
     this.setState({
       highlights: [{ ...highlight, id: getNextId() }, ...highlights],
     });
+
+    console.log("Adding highlight to app state...");
+
+    const annotation: Annotation = {
+      color: "asdf",
+      content: highlight.content.text!,
+      position: highlight.position,
+      note: highlight.comment.text,
+    };
+    this.props.handleCreateAnnotation(annotation);
   }
 
   updateHighlight(highlightId: string, position: Object, content: Object) {
@@ -175,16 +188,33 @@ class PdfViewer extends Component<Props, State> {
                   content,
                   hideTipAndSelection,
                   transformSelection
-                ) => (
-                  <Tip
-                    onOpen={transformSelection}
-                    onConfirm={(comment) => {
-                      this.addHighlight({ content, position, comment });
+                ) => {
+                  transformSelection();
 
-                      hideTipAndSelection();
-                    }}
-                  />
-                )}
+                  return (
+                    <HighlightTooltip
+                      handleAddNote={(comment) => {
+                        this.addHighlight({ content, position, comment });
+
+                        hideTipAndSelection();
+                      }}
+                      highlightColors={[
+                        "#F9D755",
+                        "#78D45F",
+                        "#6FB7F7",
+                        "#EE7A99",
+                        "#A78FEB",
+                      ]}
+                      currentHighlightColor={"#A78FEB"}
+                      handleDeleteNote={() =>
+                        console.log("delete not implemented")
+                      }
+                      handleHighlightColorClick={() =>
+                        console.log("update not implemented")
+                      }
+                    />
+                  );
+                }}
                 highlightTransform={(
                   highlight,
                   index,
