@@ -1,31 +1,36 @@
 import { useState } from "react";
-import { ComponentMeta } from "@storybook/react";
+import { ComponentMeta, ComponentStory } from "@storybook/react";
 
 import Annotation from ".";
+import { Annotation as AnnotationType } from "../../types/types";
+import { testAnnotation, emptyTestAnnotation } from "./test-annotation";
 
 export default {
   title: "Highlighting/Annotation",
   component: Annotation,
 } as ComponentMeta<typeof Annotation>;
 
-export const Test = (args: any) => {
-  const [note, setNote] = useState(args.note);
+const Template: ComponentStory<typeof Annotation> = (args: {
+  annotation: AnnotationType;
+}) => {
+  const [note, setNote] = useState(args.annotation.note);
 
   return (
     <Annotation
-      text={args.text}
-      note={note}
-      location={args.location}
-      onChange={(event) => {
+      annotation={{ ...args.annotation, note }}
+      onNoteChange={(event) => {
         setNote(event.target.value);
       }}
     />
   );
 };
 
-Test.args = {
-  text:
-    "Lorem ipsum dolor sit amet consectetur adipisicing elit. Cumque explicabo est mollitia incidunt minus ullam officiis recusandae ut voluptates dolores necessitatibus hic neque molestiae ea error, id magni ipsam, cupiditate ex, labore ab!",
-  note: "That is very interesting. I saw a mention of it in book xyz.",
-  location: "",
+export const Default = Template.bind({});
+Default.args = {
+  annotation: emptyTestAnnotation,
+};
+
+export const Filled = Template.bind({});
+Filled.args = {
+  annotation: testAnnotation,
 };

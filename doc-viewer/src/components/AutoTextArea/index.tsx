@@ -25,7 +25,7 @@ export default function AutoTextArea(
 
   useEffect(() => {
     // resize on window size change
-    const resizeObserver = new ResizeObserver((divElement) => {
+    const resizeObserver = new ResizeObserver(() => {
       setTextAreaHeight("auto");
       setParentHeight(`${textAreaRef.current!.scrollHeight}px`);
       setTextAreaHeight(
@@ -35,6 +35,9 @@ export default function AutoTextArea(
     if (textAreaRef.current) {
       resizeObserver.observe(textAreaRef.current);
     }
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, [textAreaRef]);
 
   const onChangeHandler = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -61,7 +64,7 @@ export default function AutoTextArea(
           height: textAreaHeight,
           resize: "none",
         }}
-        className="appearance-none border-2 border-transparent rounded w-full py-2 pl-2 pr-4 focus:outline-none focus:border-gray-200"
+        className="appearance-none border-2 border-transparent rounded w-full py-2 px-2 focus:outline-none focus:border-gray-200"
         onChange={onChangeHandler}
       />
     </div>

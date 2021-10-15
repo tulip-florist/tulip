@@ -3,7 +3,6 @@ import React, { Component } from "react";
 import {
   PdfLoader,
   PdfHighlighter,
-  Tip,
   Highlight,
   Popup,
   AreaHighlight,
@@ -123,6 +122,7 @@ class PdfViewer extends Component<Props, State> {
     console.log("Adding highlight to app state...");
 
     const annotation: Annotation = {
+      id: "1a",
       color: "asdf",
       content: highlight.content.text!,
       position: highlight.position,

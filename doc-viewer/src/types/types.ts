@@ -1,4 +1,5 @@
 export interface Annotation {
+  id: string;
   color: string;
   content: string;
   // type: "text" | "area";
