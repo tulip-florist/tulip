@@ -28,8 +28,13 @@ export interface PositionPdfText {
 export enum ActionTypes {
   CREATE_ANNOTATION = "ADD_ANNOTATION",
   DELETE_ANNOTATION = "DELETE_ANNOTATION",
+  SET_ANNOTATIONS = "SET_ANNOTATIONS",
 }
 
 export type Action =
   | { type: ActionTypes.CREATE_ANNOTATION; payload: { annotation: Annotation } }
-  | { type: ActionTypes.DELETE_ANNOTATION; payload: { content: string } };
+  | { type: ActionTypes.DELETE_ANNOTATION; payload: { content: string } }
+  | {
+      type: ActionTypes.SET_ANNOTATIONS;
+      payload: { annotations: Array<Annotation> };
+    };

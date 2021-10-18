@@ -122,7 +122,7 @@ class PdfViewer extends Component<Props, State> {
     console.log("Adding highlight to app state...");
 
     const annotation: Annotation = {
-      id: "1a",
+      id: new Date().toTimeString(),
       color: "asdf",
       content: highlight.content.text!,
       position: highlight.position,

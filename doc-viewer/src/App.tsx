@@ -1,4 +1,7 @@
 import React, { useState, useReducer } from "react";
+import SplitPane from "react-split-pane";
+import "../src/style/reactSplitPane.css";
+import AnnotationList from "./components/AnnotationList";
 import DocumentReader from "./components/DocumentReader";
 import FileInput from "./components/FileInput";
 import { Action, ActionTypes, Annotation } from "./types/types";
@@ -13,6 +16,11 @@ const annotationReducer = (state: State, action: Action) => {
       return {
         ...state,
         annotations: [...state.annotations, action.payload.annotation],
+      };
+    case ActionTypes.SET_ANNOTATIONS:
+      return {
+        ...state,
+        annotations: action.payload.annotations,
       };
     default:
       throw new Error("Not a valid action for annotationReducer");
@@ -44,8 +52,8 @@ function App() {
     <div className="App">
       <h1>Tulip 🌷</h1>
       <FileInput handleInputChange={handleFileInputChange} />
-      <div className="grid grid-cols-12 grid-rows-1">
-        <div className="col-span-8">
+      <SplitPane split="vertical" maxSize={-300} defaultSize={1100}>
+        <div className="pr-2">
           {file && (
             <DocumentReader
               file={file}
@@ -53,14 +61,18 @@ function App() {
             />
           )}
         </div>
-        <div className="col-span-4 bg-gray-300">
-          <ul>
-            {state.annotations.map((it) => (
-              <p className="my-6">{it.content}</p>
-            ))}
-          </ul>
+        <div className="h-full overflow-y-auto">
+          <AnnotationList
+            annotations={state.annotations}
+            setAnnotations={(annotations) =>
+              dispatch({
+                type: ActionTypes.SET_ANNOTATIONS,
+                payload: { annotations },
+              })
+            }
+          />
         </div>
-      </div>
+      </SplitPane>
     </div>
   );
 }
