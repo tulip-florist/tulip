@@ -1,4 +1,4 @@
-import React, { useState, useReducer, ChangeEvent } from "react";
+import React, { useState, useReducer, ChangeEvent, useCallback } from "react";
 import SplitPane from "react-split-pane";
 import "../src/style/reactSplitPane.css";
 import Annotation from "./components/Annotation";
@@ -128,6 +128,14 @@ function App() {
     }
   };
 
+  const handleAnnotationNoteUpateMemo = useCallback(handleAnnotationNoteUpate, [
+    dispatch,
+  ]);
+
+  const handleDeleteAnnotationMemo = useCallback(handleDeleteAnnotation, [
+    dispatch,
+  ]);
+
   return (
     <div className="App">
       <h1>Tulip 🌷</h1>
@@ -152,8 +160,8 @@ function App() {
                   <div className="py-1 ..." key={annotation.id}>
                     <AnnotationMemo
                       annotation={annotation}
-                      onNoteChange={handleAnnotationNoteUpate}
-                      onDelete={handleDeleteAnnotation}
+                      onNoteChange={handleAnnotationNoteUpateMemo}
+                      onDelete={handleDeleteAnnotationMemo}
                     />
                   </div>
                 );
