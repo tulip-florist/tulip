@@ -21,6 +21,7 @@ const Template: ComponentStory<typeof Annotation> = (args: {
       onNoteChange={(event) => {
         setNote(event.target.value);
       }}
+      onDelete={(annotationId) => {}}
     />
   );
 };

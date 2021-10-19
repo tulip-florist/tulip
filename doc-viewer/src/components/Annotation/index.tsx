@@ -1,16 +1,21 @@
 import { ChangeEvent, ReactElement } from "react";
+import useDetectClickOut from "../../hooks/useDetectClickOut";
 import { UilEllipsisH } from "@iconscout/react-unicons";
 import AutoTextArea from "../AutoTextArea";
 import { Annotation as AnnotationType } from "../../types/types";
 interface Props {
   annotation: AnnotationType;
   onNoteChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  onDelete: (annotationId: AnnotationType["id"]) => void;
 }
 
 export default function Annotation({
   annotation,
   onNoteChange,
+  onDelete,
 }: Props): ReactElement {
+  const { show, nodeRef, triggerRef } = useDetectClickOut(false);
+
   return (
     <>
       <div className="border-2 border-gray-200 rounded p-5">
@@ -22,14 +27,31 @@ export default function Annotation({
             <blockquote>{annotation.highlight.text}</blockquote>
           </div>
           <div className="col-start-12 justify-self-end">
-            <button
-              type="button"
-              className="bg-gray-100 hover:bg-gray-200 font-bold rounded"
-            >
-              <UilEllipsisH className="text-gray-400" />
-            </button>
+            <div ref={triggerRef}>
+              <button
+                type="button"
+                className="bg-gray-100 hover:bg-gray-200 font-bold rounded"
+              >
+                <UilEllipsisH className="text-gray-400" />
+              </button>
+            </div>
+            {show && (
+              <div
+                className="origin-top-right absolute right-8 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+                aria-orientation="vertical"
+                ref={nodeRef}
+              >
+                <button
+                  type="button"
+                  className="text-gray-700 block px-4 py-2 text-sm w-full text-left hover:bg-gray-100 select-none"
+                  onClick={() => onDelete(annotation.id)}
+                >
+                  Delete Note
+                </button>
+              </div>
+            )}
           </div>
-          <div className="row-start-2 col-span-11 border-l-4 border-transparent pl-1 pt-1">
+          <div className="row-start-2 col-span-11 border-l-4 border-transparent pl-1 pt-1 select-none">
             <AutoTextArea
               placeholder="Add note..."
               value={annotation.note}

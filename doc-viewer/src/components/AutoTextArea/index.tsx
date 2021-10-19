@@ -27,10 +27,12 @@ export default function AutoTextArea(
     // resize on window size change
     const resizeObserver = new ResizeObserver(() => {
       setTextAreaHeight("auto");
-      setParentHeight(`${textAreaRef.current!.scrollHeight}px`);
-      setTextAreaHeight(
-        `${textAreaRef.current!.scrollHeight + textAreaBorder}px`
-      );
+      if (textAreaRef.current) {
+        setParentHeight(`${textAreaRef.current!.scrollHeight}px`);
+        setTextAreaHeight(
+          `${textAreaRef.current!.scrollHeight + textAreaBorder}px`
+        );
+      }
     });
     if (textAreaRef.current) {
       resizeObserver.observe(textAreaRef.current);

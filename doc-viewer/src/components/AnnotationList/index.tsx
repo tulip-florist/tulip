@@ -11,9 +11,19 @@ export default function AnnotationList({
   annotations,
   setAnnotations,
 }: Props): ReactElement {
-  const updateAnnotations = (annotationId: string, note: string): void => {
+  const updateAnnotations = (
+    annotationId: AnnotationType["id"],
+    note: AnnotationType["note"]
+  ): void => {
     const newAnnotations = annotations.map((annotation) =>
       annotation.id === annotationId ? { ...annotation, note } : annotation
+    );
+    setAnnotations(newAnnotations);
+  };
+
+  const deleteAnnotation = (annotationId: AnnotationType["id"]): void => {
+    const newAnnotations = annotations.filter(
+      (annotation) => annotation.id !== annotationId
     );
     setAnnotations(newAnnotations);
   };
@@ -31,6 +41,9 @@ export default function AnnotationList({
                 ): void => {
                   const note: string = event.target.value;
                   updateAnnotations(annotation.id, note);
+                }}
+                onDelete={(annotationId) => {
+                  deleteAnnotation(annotationId);
                 }}
               />
             </div>
