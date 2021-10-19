@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useEffect, useMemo } from "react";
 
 import {
   PdfLoader,
@@ -54,12 +54,7 @@ const HighlightPopup = ({
     </div>
   ) : null;
 
-const PRIMARY_PDF_URL = "https://arxiv.org/pdf/1708.08021.pdf";
-const SECONDARY_PDF_URL = "https://arxiv.org/pdf/1604.02480.pdf";
-
 const searchParams = new URLSearchParams(document.location.search);
-
-const initialUrl = searchParams.get("url") || PRIMARY_PDF_URL;
 
 function annotationToPdfAnnotation(annotation: Annotation): PdfAnnotation {
   return {
@@ -81,66 +76,48 @@ function pdfAnnotationToAnnotation(pdfAnnotation: PdfAnnotation): Annotation {
   };
 }
 
-class PdfViewer extends Component<Props> {
-  scrollViewerTo = (highlight: any) => {};
+const PdfViewer = ({
+  annotations,
+  file,
+  highlightColors,
+  handleCreateAnnotation,
+}: Props) => {
+  let scrollViewerTo = (highlight: any) => {};
 
-  scrollToHighlightFromHash = () => {
-    const highlight = this.getHighlightById(parseIdFromHash());
+  const scrollToHighlightFromHash = () => {
+    const highlight = getHighlightById(parseIdFromHash());
 
     if (highlight) {
-      this.scrollViewerTo(highlight);
+      scrollViewerTo(highlight);
     }
   };
 
-  componentDidMount() {
-    window.addEventListener(
-      "hashchange",
-      this.scrollToHighlightFromHash,
-      false
-    );
-  }
+  useEffect(() => {
+    window.addEventListener("hashchange", scrollToHighlightFromHash, false);
+    return () => {
+      window.removeEventListener("hashchange", scrollToHighlightFromHash);
+    };
+  });
 
-  getHighlightById(id: string) {
-    const highlights = this.props.annotations.map(annotationToPdfAnnotation);
+  const getHighlightById = (id: string) => {
+    const highlights = annotations.map(annotationToPdfAnnotation);
 
     return highlights.find((highlight) => highlight.id === id);
-  }
+  };
 
-  // updateHighlight(highlightId: string, position: Object, content: Object) {
-  //   console.log("Updating highlight", highlightId, position, content);
+  const url = useMemo(() => {
+    return URL.createObjectURL(file);
+  }, [file]);
 
-  //   this.setState({
-  //     highlights: this.state.highlights.map((h) => {
-  //       const {
-  //         id,
-  //         position: originalPosition,
-  //         content: originalContent,
-  //         ...rest
-  //       } = h;
-  //       return id === highlightId
-  //         ? {
-  //             id,
-  //             position: { ...originalPosition, ...position },
-  //             content: { ...originalContent, ...content },
-  //             ...rest,
-  //           }
-  //         : h;
-  //     }),
-  //   });
-  // }
+  const highlights: Array<PdfAnnotation> = annotations.map(
+    annotationToPdfAnnotation
+  );
 
-  render() {
-    const { file, annotations } = this.props;
-    const url = URL.createObjectURL(file);
-
-    const highlights: Array<PdfAnnotation> = annotations.map(
-      annotationToPdfAnnotation
-    );
-
-    return (
-      <div className="App" style={{ display: "flex", height: "100vh" }}>
-        <PdfLoader url={url} beforeLoad={<Spinner />}>
-          {(pdfDocument) => (
+  return (
+    <div className="App" style={{ display: "flex", height: "100vh" }}>
+      <PdfLoader url={url} beforeLoad={<Spinner />}>
+        {(pdfDocument) => {
+          return (
             <PdfHighlighter<PdfAnnotation>
               highlights={highlights}
               pdfDocument={pdfDocument}
@@ -148,9 +125,9 @@ class PdfViewer extends Component<Props> {
               onScrollChange={resetHash}
               // pdfScaleValue="page-width"
               scrollRef={(scrollTo) => {
-                this.scrollViewerTo = scrollTo;
+                scrollViewerTo = scrollTo;
 
-                this.scrollToHighlightFromHash();
+                scrollToHighlightFromHash();
               }}
               onSelectionFinished={(
                 position,
@@ -163,13 +140,11 @@ class PdfViewer extends Component<Props> {
                 return (
                   <HighlightTooltip
                     currentHighlightColor={undefined}
-                    highlightColors={this.props.highlightColors.map(
-                      (it) => it.hex
-                    )}
+                    highlightColors={highlightColors.map((it) => it.hex)}
                     handleHighlightColorClick={(color, active) => {
                       console.log("handleHighlightColorClick");
                       console.log(color, active);
-                      this.props.handleCreateAnnotation({
+                      handleCreateAnnotation({
                         position,
                         color,
                         highlight: content,
@@ -226,11 +201,12 @@ class PdfViewer extends Component<Props> {
                 );
               }}
             />
-          )}
-        </PdfLoader>
-      </div>
-    );
-  }
-}
+          );
+        }}
+      </PdfLoader>
+      )
+    </div>
+  );
+};
 
 export default PdfViewer;
