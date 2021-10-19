@@ -15,8 +15,11 @@ export default function Annotation({
     <>
       <div className="border-2 border-gray-200 rounded p-5">
         <div className="grid grid-cols-12 grid-rows-2 gap-x-2 gap-y-2 grid-rows-none grid-cols-none">
-          <div className="row-start-1 col-span-11 border-l-4 border-yellow-300 pl-3 flex flex-col justify-center">
-            <blockquote>{annotation.content}</blockquote>
+          <div
+            className="row-start-1 col-span-11 border-l-4 border-yellow-300 pl-3 flex flex-col justify-center"
+            style={{ borderColor: annotation.color }}
+          >
+            <blockquote>{annotation.highlight.text}</blockquote>
           </div>
           <div className="col-start-12 justify-self-end">
             <button

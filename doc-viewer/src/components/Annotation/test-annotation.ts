@@ -22,8 +22,9 @@ const testPosition = {
 
 export const testAnnotation = {
   id: "1a",
-  content:
-    "Lorem ipsum dolor sit amet consectetur adipisicing elit. Cumque explicabo est mollitia incidunt minus ullam officiis recusandae ut voluptates dolores necessitatibus hic neque molestiae ea error, id magni ipsam, cupiditate ex, labore ab!",
+  highlight: {
+    text: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Cumque explicabo est mollitia incidunt minus ullam officiis recusandae ut voluptates dolores necessitatibus hic neque molestiae ea error, id magni ipsam, cupiditate ex, labore ab!",
+  },
   note: "That is very interesting. I saw a mention of it in book xyz.",
   color: "",
   position: testPosition,
@@ -31,7 +32,7 @@ export const testAnnotation = {
 
 export const emptyTestAnnotation = {
   id: "1a",
-  content: "",
+  highlight: {text: ""},
   note: "",
   color: "",
   position: testPosition,

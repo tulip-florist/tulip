@@ -7,16 +7,28 @@ interface Props {
 }
 
 const HighlightTooltip = ({ highlightColorPickers, menuItems }: Props) => {
+  const menuItemsElement = (
+    <>
+      <div className="border-t-2 my-3" />
+      <div className="space-y-1">{menuItems}</div>
+    </>
+  );
+
   return (
     <div className="bg-gray-100 rounded-lg p-2 max-w-sm flex flex-col">
       <div className="flex flex-row space-x-2">{highlightColorPickers}</div>
-      <div className="border-t-2 my-3" />
-      <div className="space-y-1">{menuItems}</div>
+      {menuItems && menuItems.length > 0 && menuItemsElement}
     </div>
   );
 };
 
-const MenuItem = ({ text, onClick }: { text: string; onClick: () => void }) => (
+const MenuItem = ({
+  text,
+  onClick,
+}: {
+  text: string;
+  onClick: (...args: Array<any>) => void;
+}) => (
   <div className="cursor-pointer" onClick={onClick}>
     {text}
   </div>
@@ -24,9 +36,7 @@ const MenuItem = ({ text, onClick }: { text: string; onClick: () => void }) => (
 
 interface DefaultHighlightTooltipProps {
   highlightColors: Array<string>;
-  currentHighlightColor: string;
-  handleAddNote: (...args: any[]) => void;
-  handleDeleteNote: () => void;
+  currentHighlightColor?: string;
   handleHighlightColorClick: (color: string, active: boolean) => void;
 }
 
@@ -34,8 +44,6 @@ const DefaultHighlightTooltip = (props: DefaultHighlightTooltipProps) => {
   const {
     highlightColors,
     currentHighlightColor,
-    handleAddNote,
-    handleDeleteNote,
     handleHighlightColorClick,
   }: DefaultHighlightTooltipProps = props;
 
@@ -52,18 +60,7 @@ const DefaultHighlightTooltip = (props: DefaultHighlightTooltipProps) => {
     );
   });
 
-  const defaultMenuItems: Array<ReactElement> = [
-    {
-      text: "Add note",
-      onClick: handleAddNote,
-    },
-    {
-      text: "Delete note",
-      onClick: handleDeleteNote,
-    },
-  ].map((item) => (
-    <MenuItem text={item.text} key={item.text} onClick={item.onClick} />
-  ));
+  const defaultMenuItems: Array<ReactElement> = [];
 
   return (
     <HighlightTooltip

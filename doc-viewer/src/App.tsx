@@ -4,6 +4,11 @@ import "../src/style/reactSplitPane.css";
 import AnnotationList from "./components/AnnotationList";
 import DocumentReader from "./components/DocumentReader";
 import FileInput from "./components/FileInput";
+import {
+  AnnotationNoId,
+  Color,
+  handleCreateAnnotationType,
+} from "./types/types";
 import { Action, ActionTypes, Annotation } from "./types/types";
 
 interface State {
@@ -13,9 +18,15 @@ interface State {
 const annotationReducer = (state: State, action: Action) => {
   switch (action.type) {
     case ActionTypes.CREATE_ANNOTATION:
+      const newId = Math.random().toString();
+      const newAnnotation = { ...action.payload.annotation, id: newId };
+      const updatedAnnotation: Array<Annotation> = [
+        ...state.annotations,
+        newAnnotation,
+      ];
       return {
         ...state,
-        annotations: [...state.annotations, action.payload.annotation],
+        annotations: updatedAnnotation,
       };
     case ActionTypes.SET_ANNOTATIONS:
       return {
@@ -27,13 +38,36 @@ const annotationReducer = (state: State, action: Action) => {
   }
 };
 
+function generateUID() {
+  const firstPart = ("000" + ((Math.random() * 46656) | 0).toString(36)).slice(
+    -3
+  );
+  const secondPart = ("000" + ((Math.random() * 46656) | 0).toString(36)).slice(
+    -3
+  );
+  return firstPart + secondPart;
+}
+
+const defaultHighlightColors: Array<Color> = [
+  "#F9D755",
+  "#78D45F",
+  "#6FB7F7",
+  "#EE7A99",
+  "#A78FEB",
+].map((it) => ({ id: generateUID(), hex: it }));
+
 function App() {
   const [file, setFile] = useState<File | null>(null);
   const [state, dispatch] = useReducer(annotationReducer, {
     annotations: [],
   });
+  const [highlightColors, setHighlightColors] = useState(
+    defaultHighlightColors
+  );
 
-  const handleCreateAnnotation = (annotation: Annotation) => {
+  const handleCreateAnnotation: handleCreateAnnotationType = (
+    annotation: AnnotationNoId
+  ) => {
     dispatch({ type: ActionTypes.CREATE_ANNOTATION, payload: { annotation } });
   };
 
@@ -58,6 +92,8 @@ function App() {
             <DocumentReader
               file={file}
               handleCreateAnnotation={handleCreateAnnotation}
+              highlightColors={highlightColors}
+              annotations={state.annotations}
             />
           )}
         </div>

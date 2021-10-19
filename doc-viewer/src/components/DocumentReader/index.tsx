@@ -1,11 +1,18 @@
 import { ReactElement, useEffect, useState } from "react";
 import PdfReader from "../PdfReader";
 import EpubReader from "../EpubReader";
-import { Annotation } from "../../types/types";
+import {
+  Annotation,
+  AnnotationNoId,
+  handleCreateAnnotationType,
+} from "../../types/types";
+import { Color } from "../../types/types";
 
 interface Props {
   file: File;
-  handleCreateAnnotation: (annotation: Annotation) => void;
+  handleCreateAnnotation: handleCreateAnnotationType;
+  highlightColors: Array<Color>;
+  annotations: Array<Annotation>;
 }
 
 enum Reader {
@@ -16,6 +23,8 @@ enum Reader {
 export default function DocumentReader({
   file,
   handleCreateAnnotation,
+  highlightColors,
+  annotations,
 }: Props): ReactElement {
   const [reader, setReader] = useState<Reader | null>();
 
@@ -37,7 +46,9 @@ export default function DocumentReader({
       {reader === Reader.PdfReader ? (
         <PdfReader
           file={file}
+          annotations={annotations}
           handleCreateAnnotation={handleCreateAnnotation}
+          highlightColors={highlightColors}
         />
       ) : (
         <EpubReader file={file} />

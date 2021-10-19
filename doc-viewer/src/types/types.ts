@@ -1,11 +1,28 @@
-export interface Annotation {
-  id: string;
+export interface Color {
+  id: string
+  hex: string
+}
+
+export interface LTWH {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export interface AnnotationNoId {
   color: string;
-  content: string;
-  // type: "text" | "area";
+  highlight: Highlight;
   note?: string;
   position: PositionPdfText;
-  // sourceType: "pdf" | "epub";
+}
+export interface Annotation extends AnnotationNoId {
+  id: string
+}
+
+export interface Highlight {
+  text?: string;
+  image?: string;
 }
 
 export interface Scaled {
@@ -32,9 +49,11 @@ export enum ActionTypes {
 }
 
 export type Action =
-  | { type: ActionTypes.CREATE_ANNOTATION; payload: { annotation: Annotation } }
+  | { type: ActionTypes.CREATE_ANNOTATION; payload: { annotation: AnnotationNoId } }
   | { type: ActionTypes.DELETE_ANNOTATION; payload: { content: string } }
   | {
-      type: ActionTypes.SET_ANNOTATIONS;
-      payload: { annotations: Array<Annotation> };
-    };
+    type: ActionTypes.SET_ANNOTATIONS;
+    payload: { annotations: Array<Annotation> };
+  };
+
+export type handleCreateAnnotationType = (newAnnotation: AnnotationNoId) => void
