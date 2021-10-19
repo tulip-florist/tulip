@@ -18,8 +18,8 @@ const Template: ComponentStory<typeof Annotation> = (args: {
   return (
     <Annotation
       annotation={{ ...args.annotation, note }}
-      onNoteChange={(event) => {
-        setNote(event.target.value);
+      onNoteChange={(annotationId, note) => {
+        setNote(note);
       }}
       onDelete={(annotationId) => {}}
     />

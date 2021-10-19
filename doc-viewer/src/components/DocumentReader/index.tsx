@@ -4,13 +4,13 @@ import EpubReader from "../EpubReader";
 import {
   Annotation,
   AnnotationNoId,
-  handleCreateAnnotationType,
+  handleCreateAnnotationSignature,
 } from "../../types/types";
 import { Color } from "../../types/types";
 
 interface Props {
   file: File;
-  handleCreateAnnotation: handleCreateAnnotationType;
+  handleCreateAnnotation: handleCreateAnnotationSignature;
   highlightColors: Array<Color>;
   annotations: Array<Annotation>;
 }

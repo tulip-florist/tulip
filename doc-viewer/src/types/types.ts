@@ -10,15 +10,19 @@ export interface LTWH {
   height: number;
 }
 
-export interface AnnotationNoId {
+export interface Annotation {
+  id: string
   color: string;
   highlight: Highlight;
   note?: string;
   position: PositionPdfText;
 }
-export interface Annotation extends AnnotationNoId {
-  id: string
-}
+
+type TypeWithNoId<T> = {
+  [Property in keyof T as Exclude<Property, "id">]: T[Property]
+};
+
+export type AnnotationNoId = TypeWithNoId<Annotation>
 
 export interface Highlight {
   text?: string;
@@ -45,15 +49,20 @@ export interface PositionPdfText {
 export enum ActionTypes {
   CREATE_ANNOTATION = "ADD_ANNOTATION",
   DELETE_ANNOTATION = "DELETE_ANNOTATION",
-  SET_ANNOTATIONS = "SET_ANNOTATIONS",
+  UPDATE_ANNOTATION = "UPDATE_ANNOTATION",
 }
 
 export type Action =
   | { type: ActionTypes.CREATE_ANNOTATION; payload: { annotation: AnnotationNoId } }
-  | { type: ActionTypes.DELETE_ANNOTATION; payload: { content: string } }
+  | { type: ActionTypes.DELETE_ANNOTATION; payload: { annotationId: string } }
   | {
-    type: ActionTypes.SET_ANNOTATIONS;
-    payload: { annotations: Array<Annotation> };
+    type: ActionTypes.UPDATE_ANNOTATION;
+    payload: { annotationId: string, propsToUpdate: Partial<AnnotationNoId> };
   };
 
-export type handleCreateAnnotationType = (newAnnotation: AnnotationNoId) => void
+
+// FUNCTION SIGNATURE TYPES
+
+export type handleCreateAnnotationSignature = (newAnnotation: AnnotationNoId) => void
+
+export type handleAnnotationNoteUpateSignature = (annotationId: string, note: string) => void

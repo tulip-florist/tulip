@@ -2,10 +2,13 @@ import { ChangeEvent, ReactElement } from "react";
 import useDetectClickOut from "../../hooks/useDetectClickOut";
 import { UilEllipsisH } from "@iconscout/react-unicons";
 import AutoTextArea from "../AutoTextArea";
-import { Annotation as AnnotationType } from "../../types/types";
+import {
+  Annotation as AnnotationType,
+  handleAnnotationNoteUpateSignature,
+} from "../../types/types";
 interface Props {
   annotation: AnnotationType;
-  onNoteChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  onNoteChange: handleAnnotationNoteUpateSignature;
   onDelete: (annotationId: AnnotationType["id"]) => void;
 }
 
@@ -15,6 +18,10 @@ export default function Annotation({
   onDelete,
 }: Props): ReactElement {
   const { show, nodeRef, triggerRef } = useDetectClickOut(false);
+
+  const handleInputChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    onNoteChange(annotation.id, event.target.value);
+  };
 
   return (
     <>
@@ -55,7 +62,7 @@ export default function Annotation({
             <AutoTextArea
               placeholder="Add note..."
               value={annotation.note}
-              onChange={onNoteChange}
+              onChange={handleInputChange}
             />
           </div>
         </div>

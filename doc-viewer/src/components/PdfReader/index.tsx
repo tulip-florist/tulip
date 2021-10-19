@@ -16,7 +16,7 @@ import {
   Annotation,
   AnnotationNoId,
   Color,
-  handleCreateAnnotationType,
+  handleCreateAnnotationSignature,
 } from "../../types/types";
 import { HighlightTooltip } from "../HighlightTooltip";
 import PdfHighlight from "../PdfHighlight";
@@ -29,7 +29,7 @@ export interface PdfAnnotation extends PdfAnnotationNoId, IHighlight {}
 
 interface Props {
   file: File;
-  handleCreateAnnotation: handleCreateAnnotationType;
+  handleCreateAnnotation: handleCreateAnnotationSignature;
   highlightColors: Array<Color>;
   annotations: Array<Annotation>;
 }
@@ -204,7 +204,6 @@ const PdfViewer = ({
           );
         }}
       </PdfLoader>
-      )
     </div>
   );
 };
