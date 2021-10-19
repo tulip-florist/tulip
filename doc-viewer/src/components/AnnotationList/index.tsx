@@ -28,10 +28,23 @@ export default function AnnotationList({
     setAnnotations(newAnnotations);
   };
 
+  const sortedAnnotations = () => {
+    const sortedAnnotations = annotations.sort((a, b) => {
+      if (a.position.pageNumber !== b.position.pageNumber) {
+        return a.position.pageNumber - b.position.pageNumber;
+      } else if (a.position.boundingRect.y2 !== b.position.boundingRect.y2) {
+        return a.position.boundingRect.y2 - b.position.boundingRect.y2;
+      } else {
+        return a.position.boundingRect.x2 - b.position.boundingRect.x2;
+      }
+    });
+    return sortedAnnotations;
+  };
+
   return (
     <>
       <div className="flex flex-col px-2 py-1">
-        {annotations.map((annotation) => {
+        {sortedAnnotations().map((annotation) => {
           return (
             <div className="py-1 ..." key={annotation.id}>
               <Annotation
