@@ -5,6 +5,7 @@ import {
   PdfHighlighter,
   Popup,
   AreaHighlight,
+  ScaledPosition,
 } from "react-pdf-highlighter";
 
 import type { IHighlight, NewHighlight } from "react-pdf-highlighter";
@@ -21,11 +22,11 @@ import {
 import { HighlightTooltip } from "../HighlightTooltip";
 import PdfHighlight from "../PdfHighlight";
 
-export interface PdfAnnotationNoId extends NewHighlight {
+interface PdfAnnotationNoId extends NewHighlight {
   color: string;
 }
 
-export interface PdfAnnotation extends PdfAnnotationNoId, IHighlight {}
+interface PdfAnnotation extends PdfAnnotationNoId, IHighlight {}
 
 interface Props {
   file: File;
@@ -60,7 +61,7 @@ function annotationToPdfAnnotation(annotation: Annotation): PdfAnnotation {
   return {
     id: annotation.id,
     color: annotation.color,
-    position: annotation.position,
+    position: annotation.position as ScaledPosition,
     comment: { text: annotation.note || "", emoji: "" },
     content: { text: annotation.highlight.text },
   };

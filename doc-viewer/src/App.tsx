@@ -1,4 +1,5 @@
-import React, { useState, useReducer, ChangeEvent, useCallback } from "react";
+import { EpubCFI } from "epubjs";
+import React, { useState, useReducer, useCallback, useRef } from "react";
 import SplitPane from "react-split-pane";
 import "../src/style/reactSplitPane.css";
 import Annotation from "./components/Annotation";
@@ -12,6 +13,9 @@ import {
   Action,
   ActionTypes,
   Annotation as AnnotationType,
+  PdfAnnotation,
+  EpubAnnotation,
+  FileTypes,
 } from "./types/types";
 interface State {
   annotations: Array<AnnotationType>;
@@ -66,15 +70,6 @@ function generateUID() {
   return firstPart + secondPart;
 }
 
-const sortAnnotationsByPositition = (a: AnnotationType, b: AnnotationType) => {
-  if (a.position.pageNumber !== b.position.pageNumber) {
-    return a.position.pageNumber - b.position.pageNumber;
-  } else if (a.position.boundingRect.y2 !== b.position.boundingRect.y2) {
-    return a.position.boundingRect.y2 - b.position.boundingRect.y2;
-  } else {
-    return a.position.boundingRect.x2 - b.position.boundingRect.x2;
-  }
-};
 const AnnotationMemo = React.memo(Annotation);
 
 const defaultHighlightColors: Array<Color> = [
@@ -87,12 +82,23 @@ const defaultHighlightColors: Array<Color> = [
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
+  const fileType = useRef<FileTypes>();
   const [state, dispatch] = useReducer(annotationReducer, {
     annotations: [],
   });
   const [highlightColors, setHighlightColors] = useState(
     defaultHighlightColors
   );
+
+  const setFileType = (file: File) => {
+    if (file.type === "application/pdf") {
+      fileType.current = FileTypes.Pdf;
+    } else if (file.type === "application/epub+zip") {
+      fileType.current = FileTypes.Epub;
+    } else {
+      fileType.current = undefined;
+    }
+  };
 
   const handleCreateAnnotation: handleCreateAnnotationSignature = (
     annotation: AnnotationNoId
@@ -117,6 +123,36 @@ function App() {
     });
   };
 
+  const sortAnnotationsByPositition = (
+    ann1: AnnotationType,
+    ann2: AnnotationType
+  ) => {
+    switch (fileType.current) {
+      case FileTypes.Epub:
+        return new EpubCFI().compare(
+          (ann1 as EpubAnnotation).position.cfiRange,
+          (ann2 as EpubAnnotation).position.cfiRange
+        );
+
+      case FileTypes.Pdf:
+        const pdfAPos1: PdfAnnotation["position"] = (ann1 as PdfAnnotation)
+          .position;
+        const pdfAPos2: PdfAnnotation["position"] = (ann2 as PdfAnnotation)
+          .position;
+
+        if (pdfAPos1.pageNumber !== pdfAPos2.pageNumber) {
+          return pdfAPos1.pageNumber - pdfAPos2.pageNumber;
+        } else if (pdfAPos1.boundingRect.y2 !== pdfAPos2.boundingRect.y2) {
+          return pdfAPos1.boundingRect.y2 - pdfAPos2.boundingRect.y2;
+        } else {
+          return pdfAPos1.boundingRect.x2 - pdfAPos2.boundingRect.x2;
+        }
+
+      default:
+        return 0;
+    }
+  };
+
   const handleFileInputChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -124,6 +160,7 @@ function App() {
     const file = files?.[0] || null;
     if (file) {
       setFile(file);
+      setFileType(file);
       console.log("file input change", files);
     }
   };
@@ -141,7 +178,7 @@ function App() {
       <h1>Tulip 🌷</h1>
       <FileInput handleInputChange={handleFileInputChange} />
       <SplitPane split="vertical" maxSize={-300} defaultSize={1100}>
-        <div className="pr-2">
+        <div className="pr-2 h-full w-full">
           {file && (
             <DocumentReader
               file={file}

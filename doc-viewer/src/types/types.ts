@@ -1,6 +1,6 @@
 export interface Color {
-  id: string
-  hex: string
+  id: string;
+  hex: string;
 }
 
 export interface LTWH {
@@ -11,18 +11,26 @@ export interface LTWH {
 }
 
 export interface Annotation {
-  id: string
+  id: string;
   color: string;
   highlight: Highlight;
   note?: string;
+  position: PositionPdfText | PositionEpub;
+}
+
+export interface PdfAnnotation extends Annotation {
   position: PositionPdfText;
 }
 
+export interface EpubAnnotation extends Annotation {
+  position: PositionEpub;
+}
+
 type TypeWithNoId<T> = {
-  [Property in keyof T as Exclude<Property, "id">]: T[Property]
+  [Property in keyof T as Exclude<Property, "id">]: T[Property];
 };
 
-export type AnnotationNoId = TypeWithNoId<Annotation>
+export type AnnotationNoId = TypeWithNoId<Annotation>;
 
 export interface Highlight {
   text?: string;
@@ -46,6 +54,15 @@ export interface PositionPdfText {
   usePdfCoordinates?: boolean;
 }
 
+export interface PositionEpub {
+  cfiRange: string;
+}
+
+export enum FileTypes {
+  Pdf,
+  Epub,
+}
+
 export enum ActionTypes {
   CREATE_ANNOTATION = "ADD_ANNOTATION",
   DELETE_ANNOTATION = "DELETE_ANNOTATION",
@@ -53,16 +70,23 @@ export enum ActionTypes {
 }
 
 export type Action =
-  | { type: ActionTypes.CREATE_ANNOTATION; payload: { annotation: AnnotationNoId } }
+  | {
+      type: ActionTypes.CREATE_ANNOTATION;
+      payload: { annotation: AnnotationNoId };
+    }
   | { type: ActionTypes.DELETE_ANNOTATION; payload: { annotationId: string } }
   | {
-    type: ActionTypes.UPDATE_ANNOTATION;
-    payload: { annotationId: string, propsToUpdate: Partial<AnnotationNoId> };
-  };
-
+      type: ActionTypes.UPDATE_ANNOTATION;
+      payload: { annotationId: string; propsToUpdate: Partial<AnnotationNoId> };
+    };
 
 // FUNCTION SIGNATURE TYPES
 
-export type handleCreateAnnotationSignature = (newAnnotation: AnnotationNoId) => void
+export type handleCreateAnnotationSignature = (
+  newAnnotation: AnnotationNoId
+) => void;
 
-export type handleAnnotationNoteUpateSignature = (annotationId: string, note: string) => void
+export type handleAnnotationNoteUpateSignature = (
+  annotationId: string,
+  note: string
+) => void;
