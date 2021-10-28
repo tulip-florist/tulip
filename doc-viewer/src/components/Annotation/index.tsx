@@ -33,7 +33,7 @@ export default function Annotation({
           >
             <blockquote>{annotation.highlight.text}</blockquote>
           </div>
-          <div className="col-start-12 justify-self-end">
+          <div className="col-start-12 relative justify-self-end">
             <div ref={triggerRef}>
               <button
                 type="button"
@@ -44,7 +44,7 @@ export default function Annotation({
             </div>
             {show && (
               <div
-                className="origin-top-right absolute right-8 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+                className="origin-top-right right-0 w-max absolute rounded-md z-10 shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
                 aria-orientation="vertical"
                 ref={nodeRef}
               >
@@ -53,7 +53,7 @@ export default function Annotation({
                   className="text-gray-700 block px-4 py-2 text-sm w-full text-left hover:bg-gray-100 select-none"
                   onClick={() => onDelete(annotation.id)}
                 >
-                  Delete Note
+                  Delete
                 </button>
               </div>
             )}

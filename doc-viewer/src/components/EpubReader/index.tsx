@@ -88,7 +88,11 @@ export default function EpubReader({
 
   const onMouseUpHandler = useCallback(
     (event: MouseEvent) => {
-      // wait to make sure that currSelection got set by selectionChanged
+      // wait to make sure that currSelection was set by selectionChanged().
+      // This is necessary because the "selected" event of epubjs is randomly
+      // triggered several times during the text selection and not only at
+      // the end(=mouse up)
+
       setTimeout(() => {
         if (!viewerRef.current || !currSelection.current) return;
 
