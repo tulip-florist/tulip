@@ -2,6 +2,7 @@ import { useState, ReactElement, useEffect, useRef, useCallback } from "react";
 import ePub, { Book, Contents, Rendition } from "epubjs";
 import {
   Color,
+  EpubAnnotation,
   handleCreateAnnotationSignature,
   Highlight,
 } from "../../types/types";
@@ -10,12 +11,14 @@ import { HighlightTooltip } from "../HighlightTooltip";
 interface Props {
   file: File;
   highlightColors: Array<Color>;
+  annotations: Array<EpubAnnotation>;
   handleCreateAnnotation: handleCreateAnnotationSignature;
 }
 
 export default function EpubReader({
   file,
   highlightColors,
+  annotations,
   handleCreateAnnotation,
 }: Props): ReactElement {
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -32,18 +35,28 @@ export default function EpubReader({
     contents: Contents;
   }>();
 
-  const highlightDocText = (cfiRange: string, color: string) => {
-    rendition?.annotations.highlight(
-      cfiRange,
-      undefined,
-      (e: any) => {
-        // TODO: scroll to annotation in annotation-side panel
-        console.log("highlight clicked", e.target);
-      },
-      undefined,
-      { fill: color }
-    );
-  };
+  const highlightDocText = useCallback(
+    (cfiRange: string, color: string) => {
+      rendition?.annotations.highlight(
+        cfiRange,
+        undefined,
+        (e: any) => {
+          // TODO: scroll to annotation in annotation-side panel
+          console.log("highlight clicked", e.target);
+        },
+        undefined,
+        { fill: color }
+      );
+    },
+    [rendition]
+  );
+
+  const removeDocTextHighlight = useCallback(
+    (cifRange: string) => {
+      rendition?.annotations.remove(cifRange, "highlight");
+    },
+    [rendition]
+  );
 
   const handleHighlightColorClick = (color: string) => {
     setShowHTooltip(false);
@@ -52,8 +65,6 @@ export default function EpubReader({
       color,
       highlight: { text: currSelection.current?.highlight.text },
     });
-
-    highlightDocText(currSelection.current?.cfiRange!, color);
 
     currSelection.current?.contents.window.getSelection()?.removeAllRanges();
     currSelection.current = undefined;
@@ -154,6 +165,18 @@ export default function EpubReader({
       rendition.off("mousedown", onMouseDownHandler);
     };
   }, [rendition, onSelectionChanged, onMouseUpHandler, onMouseDownHandler]);
+
+  useEffect(() => {
+    annotations.forEach((annotation) => {
+      highlightDocText(annotation.position.cfiRange, annotation.color);
+    });
+
+    return () => {
+      annotations.forEach((annotation) => {
+        removeDocTextHighlight(annotation.position.cfiRange);
+      });
+    };
+  }, [annotations, removeDocTextHighlight, highlightDocText]);
 
   return (
     <>

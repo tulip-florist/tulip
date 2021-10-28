@@ -1,7 +1,11 @@
 import { ReactElement, useEffect, useState } from "react";
 import PdfReader from "../PdfReader";
 import EpubReader from "../EpubReader";
-import { Annotation, handleCreateAnnotationSignature } from "../../types/types";
+import {
+  Annotation,
+  EpubAnnotation,
+  handleCreateAnnotationSignature,
+} from "../../types/types";
 import { Color } from "../../types/types";
 
 interface Props {
@@ -50,6 +54,7 @@ export default function DocumentReader({
         <EpubReader
           file={file}
           highlightColors={highlightColors}
+          annotations={annotations as Array<EpubAnnotation>}
           handleCreateAnnotation={handleCreateAnnotation}
         />
       )}
