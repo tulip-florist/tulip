@@ -1,5 +1,5 @@
 import { useState, ReactElement, useEffect, useRef, useCallback } from "react";
-import ePub, { Book, Rendition } from "epubjs";
+import ePub, { Book, Contents, Rendition } from "epubjs";
 import {
   Color,
   handleCreateAnnotationSignature,
@@ -29,7 +29,21 @@ export default function EpubReader({
   const currSelection = useRef<{
     cfiRange: string;
     highlight: Highlight;
+    contents: Contents;
   }>();
+
+  const highlightDocText = (cfiRange: string, color: string) => {
+    rendition?.annotations.highlight(
+      cfiRange,
+      undefined,
+      (e: any) => {
+        // TODO: scroll to annotation in annotation-side panel
+        console.log("highlight clicked", e.target);
+      },
+      undefined,
+      { fill: color }
+    );
+  };
 
   const handleHighlightColorClick = (color: string) => {
     setShowHTooltip(false);
@@ -38,11 +52,15 @@ export default function EpubReader({
       color,
       highlight: { text: currSelection.current?.highlight.text },
     });
+
+    highlightDocText(currSelection.current?.cfiRange!, color);
+
+    currSelection.current?.contents.window.getSelection()?.removeAllRanges();
     currSelection.current = undefined;
   };
 
   const onSelectionChanged = useCallback(
-    (cfiRange: string) => {
+    (cfiRange: string, contents: Contents) => {
       if (!book) return;
       book.getRange(cfiRange).then((range) => {
         currSelection.current = {
@@ -50,6 +68,7 @@ export default function EpubReader({
           highlight: {
             text: range.toString(),
           },
+          contents,
         };
       });
     },
@@ -105,6 +124,16 @@ export default function EpubReader({
           flow: "scrolled",
           width: "100%",
           height: "100%",
+        });
+
+        rendition_.themes.default({
+          "::selection": {
+            background: "rgba(255,255,0, 0.3)",
+          },
+          ".epubjs-hl": {
+            "fill-opacity": "0.3",
+            "mix-blend-mode": "multiply",
+          },
         });
 
         setRendition(rendition_);
