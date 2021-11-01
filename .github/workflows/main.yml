@@ -29,6 +29,9 @@ jobs:
       - name: Npm CI
         run: |
           npm ci
+      - name: Npm Test
+        run: |
+          npm run test
       - name: Production Build
         run: |
           npm run build --if-present
