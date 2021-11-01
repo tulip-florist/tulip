@@ -10,12 +10,14 @@ interface Props {
   annotation: AnnotationType;
   onNoteChange: handleAnnotationNoteUpateSignature;
   onDelete: (annotationId: AnnotationType["id"]) => void;
+  onClick: (annotation: AnnotationType) => void;
 }
 
 export default function Annotation({
   annotation,
   onNoteChange,
   onDelete,
+  onClick,
 }: Props): ReactElement {
   const { show, nodeRef, triggerRef } = useDetectClickOut(false);
 
@@ -31,7 +33,12 @@ export default function Annotation({
             className="row-start-1 col-span-11 border-l-4 border-yellow-300 pl-3 flex flex-col justify-center"
             style={{ borderColor: annotation.color }}
           >
-            <blockquote>{annotation.highlight.text}</blockquote>
+            <blockquote
+              className="cursor-pointer"
+              onClick={() => onClick(annotation)}
+            >
+              {annotation.highlight.text}
+            </blockquote>
           </div>
           <div className="col-start-12 relative justify-self-end">
             <div ref={triggerRef}>

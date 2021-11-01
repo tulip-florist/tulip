@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 
 import {
   PdfLoader,
@@ -21,6 +21,7 @@ import {
 } from "../../types/types";
 import { HighlightTooltip } from "../HighlightTooltip";
 import PdfHighlight from "../PdfHighlight";
+import { GlobalContext } from "../../App";
 
 interface PdfAnnotationNoId extends NewHighlight {
   color: string;
@@ -33,6 +34,9 @@ interface Props {
   handleCreateAnnotation: handleCreateAnnotationSignature;
   highlightColors: Array<Color>;
   annotations: Array<Annotation>;
+  onScrollToReady: (
+    scrollToFn: (position: Annotation["position"]) => void
+  ) => void;
 }
 
 const getNextId = () => String(Math.random()).slice(2);
@@ -82,6 +86,7 @@ const PdfViewer = ({
   file,
   highlightColors,
   handleCreateAnnotation,
+  onScrollToReady,
 }: Props) => {
   let scrollViewerTo = (highlight: any) => {};
 
@@ -126,9 +131,17 @@ const PdfViewer = ({
               onScrollChange={resetHash}
               // pdfScaleValue="page-width"
               scrollRef={(scrollTo) => {
-                scrollViewerTo = scrollTo;
+                onScrollToReady(() => (position: PdfAnnotation["position"]) => {
+                  const fakeAnnotation: IHighlight = {
+                    comment: { emoji: "", text: "" },
+                    content: { image: "", text: "" },
+                    id: "",
+                    position: position,
+                  };
+                  scrollTo(fakeAnnotation);
+                });
 
-                scrollToHighlightFromHash();
+                // scrollToHighlightFromHash();
               }}
               onSelectionFinished={(
                 position,
@@ -209,4 +222,23 @@ const PdfViewer = ({
   );
 };
 
-export default PdfViewer;
+const ConnectedPdfViewer = ({
+  annotations,
+  file,
+  highlightColors,
+  handleCreateAnnotation,
+}: Omit<Props, "onScrollToReady">) => {
+  const context = useContext(GlobalContext);
+
+  return (
+    <PdfViewer
+      annotations={annotations}
+      file={file}
+      highlightColors={highlightColors}
+      handleCreateAnnotation={handleCreateAnnotation}
+      onScrollToReady={context.setScrollToFn}
+    />
+  );
+};
+
+export default ConnectedPdfViewer;

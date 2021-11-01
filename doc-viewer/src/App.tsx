@@ -80,6 +80,11 @@ const defaultHighlightColors: Array<Color> = [
   "#A78FEB",
 ].map((it) => ({ id: generateUID(), hex: it }));
 
+export const GlobalContext = React.createContext({
+  scrollToFn: (position: AnnotationType["position"]) => {},
+  setScrollToFn: (...args: any[]) => {},
+});
+
 function App() {
   const [file, setFile] = useState<File | null>(null);
   const fileType = useRef<FileTypes>();
@@ -89,6 +94,9 @@ function App() {
   const [highlightColors, setHighlightColors] = useState(
     defaultHighlightColors
   );
+  const [scrollToFn, setScrollToFn] = useState<
+    (position: AnnotationType["position"]) => void
+  >(() => () => console.log("scroll to not set"));
 
   const setFileType = (file: File) => {
     if (file.type === "application/pdf") {
@@ -180,12 +188,14 @@ function App() {
       <SplitPane split="vertical" maxSize={-300} defaultSize={1100}>
         <div className="pr-2 h-full w-full">
           {file && (
-            <DocumentReader
-              file={file}
-              handleCreateAnnotation={handleCreateAnnotation}
-              highlightColors={highlightColors}
-              annotations={state.annotations}
-            />
+            <GlobalContext.Provider value={{ scrollToFn, setScrollToFn }}>
+              <DocumentReader
+                file={file}
+                handleCreateAnnotation={handleCreateAnnotation}
+                highlightColors={highlightColors}
+                annotations={state.annotations}
+              />
+            </GlobalContext.Provider>
           )}
         </div>
         <div className="h-full overflow-y-auto">
@@ -199,6 +209,9 @@ function App() {
                       annotation={annotation}
                       onNoteChange={handleAnnotationNoteUpateMemo}
                       onDelete={handleDeleteAnnotationMemo}
+                      onClick={(annotation: AnnotationType) =>
+                        scrollToFn(annotation.position)
+                      }
                     />
                   </div>
                 );
