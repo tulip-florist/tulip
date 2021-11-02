@@ -135,10 +135,11 @@ export default function EpubReader({
     book.ready.then(() => {
       if (book.spine) {
         const rendition_ = book.renderTo("viewer", {
-          manager: "continuous",
-          flow: "scrolled",
+          flow: "paginated",
           width: "100%",
           height: "100%",
+          resizeOnOrientationChange: true,
+          spread: "auto",
         });
 
         rendition_.themes.default({
