@@ -22,21 +22,34 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+
       - name: Npm CI
         run: |
           npm ci
+
       - name: Npm Test
         run: |
           npm run test
+
       - name: Production Build
         run: |
           npm run build --if-present
         env:
           CI: ""
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: "javascript"
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
+
       - name: Archive build artifacts
         uses: actions/upload-artifact@v2
         with:
@@ -54,6 +67,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: build-artifact
+
       - name: Upload build to S3
         uses: jakejarvis/s3-sync-action@master
         with:
@@ -63,6 +77,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
+
       - name: Invalidate Cloudfront
         uses: chetan/invalidate-cloudfront-action@v2
         env:
