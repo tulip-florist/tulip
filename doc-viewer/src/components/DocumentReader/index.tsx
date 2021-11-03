@@ -13,6 +13,7 @@ interface Props {
   handleCreateAnnotation: handleCreateAnnotationSignature;
   highlightColors: Array<Color>;
   annotations: Array<Annotation>;
+  handleClickOnHighlight?: (...args: any[]) => void;
 }
 
 enum Reader {
@@ -25,6 +26,7 @@ export default function DocumentReader({
   handleCreateAnnotation,
   highlightColors,
   annotations,
+  handleClickOnHighlight,
 }: Props): ReactElement {
   const [reader, setReader] = useState<Reader | null>();
 
@@ -49,6 +51,7 @@ export default function DocumentReader({
           annotations={annotations}
           handleCreateAnnotation={handleCreateAnnotation}
           highlightColors={highlightColors}
+          handleClickOnHighlight={handleClickOnHighlight}
         />
       ) : (
         <EpubReader

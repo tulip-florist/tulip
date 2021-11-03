@@ -22,7 +22,7 @@ const Template: ComponentStory<typeof Annotation> = (args: {
         setNote(note);
       }}
       onDelete={(annotationId) => {}}
-      onClick={() => console.log("heey")}
+      onClick={() => console.log("click")}
     />
   );
 };

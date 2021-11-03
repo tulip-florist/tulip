@@ -1,74 +1,78 @@
-import {
-  ReactElement,
+import React, {
   useRef,
   useState,
   useEffect,
   TextareaHTMLAttributes,
+  useImperativeHandle,
 } from "react";
 
-export default function AutoTextArea(
-  props: TextareaHTMLAttributes<HTMLTextAreaElement>
-): ReactElement {
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const [text, setText] = useState<string>("");
-  const [textAreaHeight, setTextAreaHeight] = useState<string>("auto");
-  const [parentHeight, setParentHeight] = useState<string>("auto");
+export const AutoTextArea = React.forwardRef(
+  (props: TextareaHTMLAttributes<HTMLTextAreaElement>, forwardedRef) => {
+    const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
+    useImperativeHandle(forwardedRef, () => textAreaRef.current, [textAreaRef]);
 
-  const textAreaBorder = 4;
+    const [text, setText] = useState<string>("");
+    const [textAreaHeight, setTextAreaHeight] = useState<string>("auto");
+    const [parentHeight, setParentHeight] = useState<string>("auto");
 
-  useEffect(() => {
-    setParentHeight(`${textAreaRef.current!.scrollHeight}px`);
-    setTextAreaHeight(
-      `${textAreaRef.current!.scrollHeight + textAreaBorder}px`
-    );
-  }, [text]);
+    const textAreaBorder = 4;
 
-  useEffect(() => {
-    // resize on window size change
-    const resizeObserver = new ResizeObserver(() => {
-      setTextAreaHeight("auto");
+    useEffect(() => {
+      setParentHeight(`${textAreaRef.current!.scrollHeight}px`);
+      setTextAreaHeight(
+        `${textAreaRef.current!.scrollHeight + textAreaBorder}px`
+      );
+    }, [text]);
+
+    useEffect(() => {
+      // resize on window size change
+      const resizeObserver = new ResizeObserver(() => {
+        setTextAreaHeight("auto");
+        if (textAreaRef.current) {
+          setParentHeight(`${textAreaRef.current!.scrollHeight}px`);
+          setTextAreaHeight(
+            `${textAreaRef.current!.scrollHeight + textAreaBorder}px`
+          );
+        }
+      });
       if (textAreaRef.current) {
-        setParentHeight(`${textAreaRef.current!.scrollHeight}px`);
-        setTextAreaHeight(
-          `${textAreaRef.current!.scrollHeight + textAreaBorder}px`
-        );
+        resizeObserver.observe(textAreaRef.current);
       }
-    });
-    if (textAreaRef.current) {
-      resizeObserver.observe(textAreaRef.current);
-    }
-    return () => {
-      resizeObserver.disconnect();
+      return () => {
+        resizeObserver.disconnect();
+      };
+    }, [textAreaRef]);
+
+    const onChangeHandler = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setTextAreaHeight("auto");
+      setParentHeight(`${textAreaRef.current!.scrollHeight}px`);
+      setText(event.target.value);
+
+      if (props.onChange) {
+        props.onChange(event);
+      }
     };
-  }, [textAreaRef]);
 
-  const onChangeHandler = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setTextAreaHeight("auto");
-    setParentHeight(`${textAreaRef.current!.scrollHeight}px`);
-    setText(event.target.value);
-
-    if (props.onChange) {
-      props.onChange(event);
-    }
-  };
-
-  return (
-    <div
-      style={{
-        minHeight: parentHeight,
-      }}
-    >
-      <textarea
-        {...props}
-        ref={textAreaRef}
-        rows={1}
+    return (
+      <div
         style={{
-          height: textAreaHeight,
-          resize: "none",
+          minHeight: parentHeight,
         }}
-        className="appearance-none border-2 border-transparent rounded w-full py-2 px-2 focus:outline-none focus:border-gray-200"
-        onChange={onChangeHandler}
-      />
-    </div>
-  );
-}
+      >
+        <textarea
+          {...props}
+          ref={textAreaRef}
+          rows={1}
+          style={{
+            height: textAreaHeight,
+            resize: "none",
+          }}
+          className="appearance-none border-2 border-transparent rounded w-full py-2 px-2 focus:outline-none focus:border-gray-200"
+          onChange={onChangeHandler}
+        />
+      </div>
+    );
+  }
+);
+
+export default AutoTextArea;

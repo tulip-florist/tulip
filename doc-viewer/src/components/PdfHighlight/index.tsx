@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import { LTWH } from "../../types/types";
 
 import "./Highlight.css";
@@ -16,40 +16,36 @@ interface Props {
   isScrolledTo: boolean;
 }
 
-export class Highlight extends Component<Props> {
-  render() {
-    const {
-      position,
-      onClick,
-      onMouseOver,
-      onMouseOut,
-      color,
-      isScrolledTo,
-    } = this.props;
+export const PdfHighlight = ({
+  position,
+  onClick,
+  onMouseOver,
+  onMouseOut,
+  color,
+  isScrolledTo,
+}: Props) => {
+  const { rects, boundingRect } = position;
+  const bgStyle = color ? { backgroundColor: color } : undefined;
 
-    const { rects, boundingRect } = position;
-    const bgStyle = color ? { backgroundColor: color } : undefined;
-
-    return (
-      <div
-        className={`Highlight ${isScrolledTo ? "Highlight--scrolledTo" : ""}`}
-        style={bgStyle}
-      >
-        <div className="Highlight__parts">
-          {rects.map((rect, index) => (
-            <div
-              onMouseOver={onMouseOver}
-              onMouseOut={onMouseOut}
-              onClick={onClick}
-              key={index}
-              style={{ ...rect, ...bgStyle }}
-              className={`Highlight__part`}
-            />
-          ))}
-        </div>
+  return (
+    <div
+      className={`Highlight ${isScrolledTo ? "Highlight--scrolledTo" : ""}`}
+      style={bgStyle}
+    >
+      <div className="Highlight__parts">
+        {rects.map((rect, index) => (
+          <div
+            onMouseOver={onMouseOver}
+            onMouseOut={onMouseOut}
+            onClick={onClick}
+            key={index}
+            style={{ ...rect, ...bgStyle }}
+            className={`Highlight__part`}
+          />
+        ))}
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
-export default Highlight;
+export default PdfHighlight;

@@ -37,6 +37,7 @@ interface Props {
   onScrollToReady: (
     scrollToFn: (position: Annotation["position"]) => void
   ) => void;
+  handleClickOnHighlight?: (...args: any[]) => void;
 }
 
 const getNextId = () => String(Math.random()).slice(2);
@@ -87,6 +88,7 @@ const PdfViewer = ({
   highlightColors,
   handleCreateAnnotation,
   onScrollToReady,
+  handleClickOnHighlight,
 }: Props) => {
   let scrollViewerTo = (highlight: any) => {};
 
@@ -156,8 +158,6 @@ const PdfViewer = ({
                     currentHighlightColor={undefined}
                     highlightColors={highlightColors.map((it) => it.hex)}
                     handleHighlightColorClick={(color, active) => {
-                      console.log("handleHighlightColorClick");
-                      console.log(color, active);
                       handleCreateAnnotation({
                         position,
                         color,
@@ -186,6 +186,11 @@ const PdfViewer = ({
                     position={highlight.position}
                     color={highlight.color}
                     note={highlight?.comment?.text}
+                    onClick={
+                      handleClickOnHighlight
+                        ? () => handleClickOnHighlight(highlight.id)
+                        : undefined
+                    }
                   />
                 ) : (
                   <AreaHighlight
@@ -227,6 +232,7 @@ const ConnectedPdfViewer = ({
   file,
   highlightColors,
   handleCreateAnnotation,
+  handleClickOnHighlight,
 }: Omit<Props, "onScrollToReady">) => {
   const context = useContext(GlobalContext);
 
@@ -237,6 +243,7 @@ const ConnectedPdfViewer = ({
       highlightColors={highlightColors}
       handleCreateAnnotation={handleCreateAnnotation}
       onScrollToReady={context.setScrollToFn}
+      handleClickOnHighlight={handleClickOnHighlight}
     />
   );
 };

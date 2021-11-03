@@ -11,6 +11,8 @@ interface Props {
   onNoteChange: handleAnnotationNoteUpateSignature;
   onDelete: (annotationId: AnnotationType["id"]) => void;
   onClick: (annotation: AnnotationType) => void;
+  containerRef?: React.RefObject<HTMLDivElement>;
+  inputRef?: React.RefObject<HTMLTextAreaElement>;
 }
 
 export default function Annotation({
@@ -18,6 +20,8 @@ export default function Annotation({
   onNoteChange,
   onDelete,
   onClick,
+  containerRef,
+  inputRef,
 }: Props): ReactElement {
   const { show, nodeRef, triggerRef } = useDetectClickOut(false);
 
@@ -26,54 +30,53 @@ export default function Annotation({
   };
 
   return (
-    <>
-      <div className="border-2 border-gray-200 rounded p-5">
-        <div className="grid grid-cols-12 grid-rows-2 gap-x-2 gap-y-2 grid-rows-none grid-cols-none">
-          <div
-            className="row-start-1 col-span-11 border-l-4 border-yellow-300 pl-3 flex flex-col justify-center"
-            style={{ borderColor: annotation.color }}
+    <div ref={containerRef} className="border-2 border-gray-200 rounded p-5">
+      <div className="grid grid-cols-12 grid-rows-2 gap-x-2 gap-y-2 grid-rows-none grid-cols-none">
+        <div
+          className="row-start-1 col-span-11 border-l-4 border-yellow-300 pl-3 flex flex-col justify-center"
+          style={{ borderColor: annotation.color }}
+        >
+          <blockquote
+            className="cursor-pointer"
+            onClick={() => onClick(annotation)}
           >
-            <blockquote
-              className="cursor-pointer"
-              onClick={() => onClick(annotation)}
+            {annotation.highlight.text}
+          </blockquote>
+        </div>
+        <div className="col-start-12 relative justify-self-end">
+          <div ref={triggerRef}>
+            <button
+              type="button"
+              className="bg-gray-100 hover:bg-gray-200 font-bold rounded"
             >
-              {annotation.highlight.text}
-            </blockquote>
+              <UilEllipsisH className="text-gray-400" />
+            </button>
           </div>
-          <div className="col-start-12 relative justify-self-end">
-            <div ref={triggerRef}>
+          {show && (
+            <div
+              className="origin-top-right right-0 w-max absolute rounded-md z-10 shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+              aria-orientation="vertical"
+              ref={nodeRef}
+            >
               <button
                 type="button"
-                className="bg-gray-100 hover:bg-gray-200 font-bold rounded"
+                className="text-gray-700 block px-4 py-2 text-sm w-full text-left hover:bg-gray-100 select-none"
+                onClick={() => onDelete(annotation.id)}
               >
-                <UilEllipsisH className="text-gray-400" />
+                Delete
               </button>
             </div>
-            {show && (
-              <div
-                className="origin-top-right right-0 w-max absolute rounded-md z-10 shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
-                aria-orientation="vertical"
-                ref={nodeRef}
-              >
-                <button
-                  type="button"
-                  className="text-gray-700 block px-4 py-2 text-sm w-full text-left hover:bg-gray-100 select-none"
-                  onClick={() => onDelete(annotation.id)}
-                >
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="row-start-2 col-span-11 border-l-4 border-transparent pl-1 pt-1 select-none">
-            <AutoTextArea
-              placeholder="Add note..."
-              value={annotation.note}
-              onChange={handleInputChange}
-            />
-          </div>
+          )}
+        </div>
+        <div className="row-start-2 col-span-11 border-l-4 border-transparent pl-1 pt-1 select-none">
+          <AutoTextArea
+            placeholder="Add note..."
+            value={annotation.note}
+            onChange={handleInputChange}
+            ref={inputRef}
+          />
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -3,6 +3,7 @@ import React, { useState, useReducer, useCallback, useRef } from "react";
 import SplitPane from "react-split-pane";
 import "../src/style/reactSplitPane.css";
 import Annotation from "./components/Annotation";
+import { AnnotationList } from "./components/AnnotationList";
 import DocumentReader from "./components/DocumentReader";
 import FileInput from "./components/FileInput";
 import {
@@ -108,6 +109,14 @@ function App() {
     }
   };
 
+  const [scrollToAnnotationInList, setScrollToAnnotationInList] = useState<
+    ((id: AnnotationType["id"]) => void) | undefined
+  >();
+
+  const [focusAnnotationInput, setFocusAnnotationInput] = useState<
+    ((id: AnnotationType["id"]) => void) | undefined
+  >();
+
   const handleCreateAnnotation: handleCreateAnnotationSignature = (
     annotation: AnnotationNoId
   ) => {
@@ -194,15 +203,30 @@ function App() {
                 handleCreateAnnotation={handleCreateAnnotation}
                 highlightColors={highlightColors}
                 annotations={state.annotations}
+                handleClickOnHighlight={(id: AnnotationType["id"]) => {
+                  if (focusAnnotationInput && scrollToAnnotationInList) {
+                    focusAnnotationInput(id);
+                    scrollToAnnotationInList(id);
+                  }
+                }}
               />
             </GlobalContext.Provider>
           )}
         </div>
         <div className="h-full overflow-y-auto">
           <div className="flex flex-col px-2 py-1">
-            {state.annotations
-              .sort(sortAnnotationsByPositition)
-              .map((annotation) => {
+            <AnnotationList
+              annotations={state.annotations.sort(sortAnnotationsByPositition)}
+              onScrollToAnnotationReady={useCallback(
+                (fn) => setScrollToAnnotationInList(() => fn),
+                [setScrollToAnnotationInList]
+              )}
+              onFocusAnnotationInputReady={useCallback(
+                (fn) => setFocusAnnotationInput(() => fn),
+                [setFocusAnnotationInput]
+              )}
+            >
+              {({ annotation, containerRef, inputRef }) => {
                 return (
                   <div className="py-1 ..." key={annotation.id}>
                     <AnnotationMemo
@@ -212,10 +236,13 @@ function App() {
                       onClick={(annotation: AnnotationType) =>
                         scrollToFn(annotation.position)
                       }
+                      containerRef={containerRef}
+                      inputRef={inputRef}
                     />
                   </div>
                 );
-              })}
+              }}
+            </AnnotationList>
           </div>
         </div>
       </SplitPane>
