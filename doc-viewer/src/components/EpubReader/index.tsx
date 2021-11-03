@@ -6,6 +6,7 @@ import {
   handleCreateAnnotationSignature,
   Highlight,
 } from "../../types/types";
+import { UilAngleLeftB, UilAngleRightB } from "@iconscout/react-unicons";
 import { HighlightTooltip } from "../HighlightTooltip";
 
 interface Props {
@@ -34,6 +35,30 @@ export default function EpubReader({
     highlight: Highlight;
     contents: Contents;
   }>();
+
+  const navigateRendition = useCallback(
+    (navDirection: number) => {
+      if (!rendition) return;
+      showHTooltip && setShowHTooltip(false);
+      if (navDirection === -1) {
+        rendition.prev();
+      } else if (navDirection === 1) {
+        rendition.next();
+      }
+    },
+    [rendition, showHTooltip]
+  );
+
+  const onKeyUpHandler = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        navigateRendition(-1);
+      } else if (e.key === "ArrowRight") {
+        navigateRendition(1);
+      }
+    },
+    [navigateRendition]
+  );
 
   const highlightDocText = useCallback(
     (cfiRange: string, color: string) => {
@@ -163,13 +188,23 @@ export default function EpubReader({
     rendition.on("selected", onSelectionChanged);
     rendition.on("mouseup", onMouseUpHandler);
     rendition.on("mousedown", onMouseDownHandler);
+    rendition.on("keyup", onKeyUpHandler);
+    window.addEventListener("keyup", onKeyUpHandler);
 
     return () => {
       rendition.off("selected", onSelectionChanged);
       rendition.off("mouseup", onMouseUpHandler);
       rendition.off("mousedown", onMouseDownHandler);
+      rendition.off("keyup", onKeyUpHandler);
+      window.removeEventListener("keyup", onKeyUpHandler);
     };
-  }, [rendition, onSelectionChanged, onMouseUpHandler, onMouseDownHandler]);
+  }, [
+    rendition,
+    onSelectionChanged,
+    onMouseUpHandler,
+    onMouseDownHandler,
+    onKeyUpHandler,
+  ]);
 
   useEffect(() => {
     annotations.forEach((annotation) => {
@@ -185,7 +220,25 @@ export default function EpubReader({
 
   return (
     <>
-      <div id="viewer" className="w-full h-full" ref={viewerRef}></div>
+      <div className="h-full flex flex-col">
+        <div id="viewer" className="w-full h-full" ref={viewerRef}></div>
+        <div className="flex flex-grow justify-around mb-2 gap-x-2">
+          <button
+            type="button"
+            className="w-60 flex-shrink bg-gray-100 hover:bg-gray-200 font-bold rounded flex justify-center"
+            onClick={() => navigateRendition(-1)}
+          >
+            <UilAngleLeftB className="text-gray-400" />
+          </button>
+          <button
+            type="button"
+            className="w-60 flex-shrink bg-gray-100 hover:bg-gray-200 font-bold rounded flex justify-center"
+            onClick={() => navigateRendition(1)}
+          >
+            <UilAngleRightB className="text-gray-400" />
+          </button>
+        </div>
+      </div>
       {showHTooltip && (
         <div
           style={{
