@@ -35,11 +35,34 @@ export default function EpubReader({
     highlight: Highlight;
     contents: Contents;
   }>();
+  const hTooltipRef = useRef<HTMLDivElement>(null);
+
+  const calulateHTooltipPosition = (mouseX: number, mouseY: number) => {
+    const tooltip = hTooltipRef.current;
+    const viewer = viewerRef.current;
+
+    if (!viewer || !tooltip) return;
+
+    const maxX = viewer.scrollWidth - tooltip.offsetWidth;
+    const maxY = viewer.scrollHeight - tooltip.offsetHeight;
+
+    const pos = {
+      x: mouseX > maxX ? maxX : mouseX,
+      y: mouseY > maxY ? maxY : mouseY,
+    };
+    return pos;
+  };
+
+  const clearCurrSelection = () => {
+    setShowHTooltip(false);
+    currSelection.current?.contents.window.getSelection()?.removeAllRanges();
+    currSelection.current = undefined;
+  };
 
   const navigateRendition = useCallback(
     (navDirection: number) => {
       if (!rendition) return;
-      showHTooltip && setShowHTooltip(false);
+      clearCurrSelection();
       if (navDirection === -1) {
         rendition.prev();
       } else if (navDirection === 1) {
@@ -84,15 +107,13 @@ export default function EpubReader({
   );
 
   const handleHighlightColorClick = (color: string) => {
-    setShowHTooltip(false);
     handleCreateAnnotation({
       position: { cfiRange: currSelection.current?.cfiRange! },
       color,
       highlight: { text: currSelection.current?.highlight.text },
     });
 
-    currSelection.current?.contents.window.getSelection()?.removeAllRanges();
-    currSelection.current = undefined;
+    clearCurrSelection();
   };
 
   const onSelectionChanged = useCallback(
@@ -119,13 +140,19 @@ export default function EpubReader({
       // the end(=mouse up)
 
       setTimeout(() => {
-        if (!viewerRef.current || !currSelection.current) return;
+        if (
+          !viewerRef.current ||
+          !currSelection.current ||
+          !hTooltipRef.current
+        ) {
+          return;
+        }
 
-        const epubContainer = viewerRef.current.children[0];
-        setHTooltipPos({
-          x: event.pageX - epubContainer.scrollLeft,
-          y: event.pageY - epubContainer.scrollTop,
-        });
+        const highlightingTooltipPos = calulateHTooltipPosition(
+          event.pageX,
+          event.pageY
+        );
+        setHTooltipPos(highlightingTooltipPos);
         setShowHTooltip(true);
       }, 350);
     },
@@ -133,8 +160,7 @@ export default function EpubReader({
   );
 
   const onMouseDownHandler = useCallback(() => {
-    currSelection.current = undefined;
-    setShowHTooltip(false);
+    clearCurrSelection();
   }, []);
 
   useEffect(() => {
@@ -239,21 +265,21 @@ export default function EpubReader({
           </button>
         </div>
       </div>
-      {showHTooltip && (
-        <div
-          style={{
-            position: "absolute",
-            left: hTooltipPos?.x!,
-            top: hTooltipPos?.y!,
-          }}
-        >
-          <HighlightTooltip
-            currentHighlightColor={undefined}
-            highlightColors={highlightColors.map((it) => it.hex)}
-            handleHighlightColorClick={handleHighlightColorClick}
-          />
-        </div>
-      )}
+      <div
+        style={{
+          position: "absolute",
+          left: hTooltipPos?.x!,
+          top: hTooltipPos?.y!,
+          visibility: showHTooltip ? "visible" : "hidden",
+        }}
+        ref={hTooltipRef}
+      >
+        <HighlightTooltip
+          currentHighlightColor={undefined}
+          highlightColors={highlightColors.map((it) => it.hex)}
+          handleHighlightColorClick={handleHighlightColorClick}
+        />
+      </div>
     </>
   );
 }
