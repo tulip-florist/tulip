@@ -2,6 +2,7 @@ import { useState, ReactElement, useEffect, useRef, useCallback } from "react";
 import ePub, { Book, Contents, Rendition } from "epubjs";
 import {
   Color,
+  Annotation,
   EpubAnnotation,
   handleCreateAnnotationSignature,
   Highlight,
@@ -15,6 +16,9 @@ interface Props {
   annotations: Array<EpubAnnotation>;
   handleCreateAnnotation: handleCreateAnnotationSignature;
   handleClickOnHighlight?: (...args: any[]) => void;
+  onScrollToHighlightReady: (
+    fn: (position: Annotation["position"]) => void
+  ) => void;
 }
 
 export default function EpubReader({
@@ -23,6 +27,7 @@ export default function EpubReader({
   annotations,
   handleCreateAnnotation,
   handleClickOnHighlight,
+  onScrollToHighlightReady,
 }: Props): ReactElement {
   const viewerRef = useRef<HTMLDivElement>(null);
   const [book, setBook] = useState<Book>();
@@ -206,9 +211,13 @@ export default function EpubReader({
 
         setRendition(rendition_);
         rendition_.display();
+
+        onScrollToHighlightReady((position: Annotation["position"]) => {
+          rendition_.display((position as EpubAnnotation["position"]).cfiRange);
+        });
       }
     });
-  }, [viewerRef, book]);
+  }, [viewerRef, book, onScrollToHighlightReady]);
 
   useEffect(() => {
     if (!rendition) return;

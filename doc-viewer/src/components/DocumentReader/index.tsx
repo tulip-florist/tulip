@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useCallback, useEffect, useState } from "react";
 import PdfReader from "../PdfReader";
 import EpubReader from "../EpubReader";
 import {
@@ -14,6 +14,9 @@ interface Props {
   highlightColors: Array<Color>;
   annotations: Array<Annotation>;
   handleClickOnHighlight?: (...args: any[]) => void;
+  onScrollToHighlightReady: (
+    fn: (position: Annotation["position"]) => void
+  ) => void;
 }
 
 enum Reader {
@@ -27,6 +30,7 @@ export default function DocumentReader({
   highlightColors,
   annotations,
   handleClickOnHighlight,
+  onScrollToHighlightReady,
 }: Props): ReactElement {
   const [reader, setReader] = useState<Reader | null>();
 
@@ -42,6 +46,13 @@ export default function DocumentReader({
     };
     selectReader();
   }, [file]);
+
+  const onScrollToHighlightReadyMemo = useCallback(
+    (fn) => {
+      onScrollToHighlightReady(() => fn);
+    },
+    [onScrollToHighlightReady]
+  );
 
   return (
     <>
@@ -60,6 +71,7 @@ export default function DocumentReader({
           handleCreateAnnotation={handleCreateAnnotation}
           highlightColors={highlightColors}
           handleClickOnHighlight={handleClickOnHighlight}
+          onScrollToHighlightReady={onScrollToHighlightReadyMemo}
         />
       )}
     </>

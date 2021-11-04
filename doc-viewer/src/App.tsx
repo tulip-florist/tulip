@@ -209,6 +209,7 @@ function App() {
                     scrollToAnnotationInList(id);
                   }
                 }}
+                onScrollToHighlightReady={setScrollToFn}
               />
             </GlobalContext.Provider>
           )}
