@@ -1,66 +1,16 @@
-export interface Color {
-  id: string;
-  hex: string;
-}
-
-export interface LTWH {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
-
 export interface Annotation {
   id: string;
   color: string;
-  highlight: Highlight;
+  highlight: string;
   note?: string;
-  position: PositionPdfText | PositionEpub;
+  position: any;
 }
 
-export interface PdfAnnotation extends Annotation {
-  position: PositionPdfText;
-}
+export type FileTypes = "application/pdf" | "application/epub+zip";
 
-export interface EpubAnnotation extends Annotation {
-  position: PositionEpub;
-}
-
-type TypeWithNoId<T> = {
-  [Property in keyof T as Exclude<Property, "id">]: T[Property];
-};
-
-export type AnnotationNoId = TypeWithNoId<Annotation>;
-
-export interface Highlight {
-  text?: string;
-  image?: string;
-}
-
-export interface Scaled {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  width: number;
-  height: number;
-}
-
-export interface PositionPdfText {
-  // type: "pdf/text";
-  boundingRect: Scaled;
-  rects: Array<Scaled>;
-  pageNumber: number;
-  usePdfCoordinates?: boolean;
-}
-
-export interface PositionEpub {
-  cfiRange: string;
-}
-
-export enum FileTypes {
-  Pdf,
-  Epub,
+export enum ReaderType {
+  PdfReader,
+  EpubReader,
 }
 
 export enum ActionTypes {
@@ -72,21 +22,13 @@ export enum ActionTypes {
 export type Action =
   | {
       type: ActionTypes.CREATE_ANNOTATION;
-      payload: { annotation: AnnotationNoId };
+      payload: { annotation: Omit<Annotation, "id"> };
     }
   | { type: ActionTypes.DELETE_ANNOTATION; payload: { annotationId: string } }
   | {
       type: ActionTypes.UPDATE_ANNOTATION;
-      payload: { annotationId: string; propsToUpdate: Partial<AnnotationNoId> };
+      payload: {
+        annotationId: string;
+        propsToUpdate: Partial<Omit<Annotation, "id">>;
+      };
     };
-
-// FUNCTION SIGNATURE TYPES
-
-export type handleCreateAnnotationSignature = (
-  newAnnotation: AnnotationNoId
-) => void;
-
-export type handleAnnotationNoteUpateSignature = (
-  annotationId: string,
-  note: string
-) => void;

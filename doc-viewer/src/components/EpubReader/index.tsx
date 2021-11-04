@@ -1,32 +1,26 @@
 import { useState, ReactElement, useEffect, useRef, useCallback } from "react";
 import ePub, { Book, Contents, Rendition } from "epubjs";
-import {
-  Color,
-  Annotation,
-  EpubAnnotation,
-  handleCreateAnnotationSignature,
-  Highlight,
-} from "../../types/types";
 import { UilAngleLeftB, UilAngleRightB } from "@iconscout/react-unicons";
 import { HighlightTooltip } from "../HighlightTooltip";
+import { EpubAnnotation, EpubAnnotationNoId } from "./types";
 
 interface Props {
   file: File;
-  highlightColors: Array<Color>;
   annotations: Array<EpubAnnotation>;
-  handleCreateAnnotation: handleCreateAnnotationSignature;
-  handleClickOnHighlight?: (...args: any[]) => void;
+  highlightColors: Array<string>;
+  onCreateAnnotation: (newAnnotation: EpubAnnotationNoId) => void;
+  onHighlightClick?: (annotation: EpubAnnotation) => void;
   onScrollToHighlightReady: (
-    fn: (position: Annotation["position"]) => void
+    fn: (position: EpubAnnotation["position"]) => void
   ) => void;
 }
 
 export default function EpubReader({
   file,
-  highlightColors,
   annotations,
-  handleCreateAnnotation,
-  handleClickOnHighlight,
+  highlightColors,
+  onCreateAnnotation: handleCreateAnnotation,
+  onHighlightClick: handleClickOnHighlight,
   onScrollToHighlightReady,
 }: Props): ReactElement {
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -39,7 +33,7 @@ export default function EpubReader({
   }>();
   const currSelection = useRef<{
     cfiRange: string;
-    highlight: Highlight;
+    highlight: string;
     contents: Contents;
   }>();
   const hTooltipRef = useRef<HTMLDivElement>(null);
@@ -76,10 +70,10 @@ export default function EpubReader({
         rendition.next();
       }
     },
-    [rendition, showHTooltip]
+    [rendition]
   );
 
-  const onKeyUpHandler = useCallback(
+  const handleKeyUp = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") {
         navigateRendition(-1);
@@ -91,15 +85,15 @@ export default function EpubReader({
   );
 
   const createHighlightInDoc = useCallback(
-    (annotationId: EpubAnnotation["id"], cfiRange: string, color: string) => {
+    (annotation: EpubAnnotation) => {
       rendition?.annotations.highlight(
-        cfiRange,
+        annotation.position.cfiRange,
         undefined,
         () => {
-          if (handleClickOnHighlight) handleClickOnHighlight(annotationId);
+          if (handleClickOnHighlight) handleClickOnHighlight(annotation);
         },
         undefined,
-        { fill: color }
+        { fill: annotation.color }
       );
     },
     [rendition, handleClickOnHighlight]
@@ -113,10 +107,11 @@ export default function EpubReader({
   );
 
   const handleHighlightColorClick = (color: string) => {
+    if (!currSelection.current) return;
     handleCreateAnnotation({
-      position: { cfiRange: currSelection.current?.cfiRange! },
+      position: { cfiRange: currSelection.current.cfiRange },
       color,
-      highlight: { text: currSelection.current?.highlight.text },
+      highlight: currSelection.current.highlight,
     });
 
     clearCurrSelection();
@@ -128,9 +123,7 @@ export default function EpubReader({
       book.getRange(cfiRange).then((range) => {
         currSelection.current = {
           cfiRange,
-          highlight: {
-            text: range.toString(),
-          },
+          highlight: range.toString(),
           contents,
         };
       });
@@ -138,7 +131,7 @@ export default function EpubReader({
     [book]
   );
 
-  const onMouseUpHandler = useCallback(
+  const handleMouseUp = useCallback(
     (event: MouseEvent) => {
       // wait to make sure that currSelection was set by selectionChanged().
       // This is necessary because the "selected" event of epubjs is randomly
@@ -165,7 +158,7 @@ export default function EpubReader({
     [currSelection]
   );
 
-  const onMouseDownHandler = useCallback(() => {
+  const handleMouseDown = useCallback(() => {
     clearCurrSelection();
   }, []);
 
@@ -212,8 +205,8 @@ export default function EpubReader({
         setRendition(rendition_);
         rendition_.display();
 
-        onScrollToHighlightReady((position: Annotation["position"]) => {
-          rendition_.display((position as EpubAnnotation["position"]).cfiRange);
+        onScrollToHighlightReady((position: EpubAnnotation["position"]) => {
+          rendition_.display(position.cfiRange);
         });
       }
     });
@@ -222,33 +215,29 @@ export default function EpubReader({
   useEffect(() => {
     if (!rendition) return;
     rendition.on("selected", onSelectionChanged);
-    rendition.on("mouseup", onMouseUpHandler);
-    rendition.on("mousedown", onMouseDownHandler);
-    rendition.on("keyup", onKeyUpHandler);
-    window.addEventListener("keyup", onKeyUpHandler);
+    rendition.on("mouseup", handleMouseUp);
+    rendition.on("mousedown", handleMouseDown);
+    rendition.on("keyup", handleKeyUp);
+    window.addEventListener("keyup", handleKeyUp);
 
     return () => {
       rendition.off("selected", onSelectionChanged);
-      rendition.off("mouseup", onMouseUpHandler);
-      rendition.off("mousedown", onMouseDownHandler);
-      rendition.off("keyup", onKeyUpHandler);
-      window.removeEventListener("keyup", onKeyUpHandler);
+      rendition.off("mouseup", handleMouseUp);
+      rendition.off("mousedown", handleMouseDown);
+      rendition.off("keyup", handleKeyUp);
+      window.removeEventListener("keyup", handleKeyUp);
     };
   }, [
     rendition,
     onSelectionChanged,
-    onMouseUpHandler,
-    onMouseDownHandler,
-    onKeyUpHandler,
+    handleMouseUp,
+    handleMouseDown,
+    handleKeyUp,
   ]);
 
   useEffect(() => {
     annotations.forEach((annotation) => {
-      createHighlightInDoc(
-        annotation.id,
-        annotation.position.cfiRange,
-        annotation.color
-      );
+      createHighlightInDoc(annotation);
     });
 
     return () => {
@@ -290,8 +279,8 @@ export default function EpubReader({
       >
         <HighlightTooltip
           currentHighlightColor={undefined}
-          highlightColors={highlightColors.map((it) => it.hex)}
-          handleHighlightColorClick={handleHighlightColorClick}
+          highlightColors={highlightColors}
+          onColorClick={handleHighlightColorClick}
         />
       </div>
     </>

@@ -2,21 +2,22 @@ import { ChangeEvent, ReactElement } from "react";
 import useDetectClickOut from "../../hooks/useDetectClickOut";
 import { UilEllipsisH } from "@iconscout/react-unicons";
 import AutoTextArea from "../AutoTextArea";
-import {
-  Annotation as AnnotationType,
-  handleAnnotationNoteUpateSignature,
-} from "../../types/types";
+
 interface Props {
-  annotation: AnnotationType;
-  onNoteChange: handleAnnotationNoteUpateSignature;
-  onDelete: (annotationId: AnnotationType["id"]) => void;
-  onClick: (annotation: AnnotationType) => void;
+  highlight: string;
+  note?: string;
+  color: string;
+  onNoteChange: (note: string) => void;
+  onDelete: () => void;
+  onClick: () => void;
   containerRef?: React.RefObject<HTMLDivElement>;
   inputRef?: React.RefObject<HTMLTextAreaElement>;
 }
 
 export default function Annotation({
-  annotation,
+  highlight,
+  note,
+  color,
   onNoteChange,
   onDelete,
   onClick,
@@ -25,22 +26,15 @@ export default function Annotation({
 }: Props): ReactElement {
   const { show, nodeRef, triggerRef } = useDetectClickOut(false);
 
-  const handleInputChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    onNoteChange(annotation.id, event.target.value);
-  };
-
   return (
     <div ref={containerRef} className="border-2 border-gray-200 rounded p-5">
       <div className="grid grid-cols-12 grid-rows-2 gap-x-2 gap-y-2 grid-rows-none grid-cols-none">
         <div
           className="row-start-1 col-span-11 border-l-4 border-yellow-300 pl-3 flex flex-col justify-center"
-          style={{ borderColor: annotation.color }}
+          style={{ borderColor: color }}
         >
-          <blockquote
-            className="cursor-pointer"
-            onClick={() => onClick(annotation)}
-          >
-            {annotation.highlight.text}
+          <blockquote className="cursor-pointer" onClick={onClick}>
+            {highlight}
           </blockquote>
         </div>
         <div className="col-start-12 relative justify-self-end">
@@ -61,7 +55,7 @@ export default function Annotation({
               <button
                 type="button"
                 className="text-gray-700 block px-4 py-2 text-sm w-full text-left hover:bg-gray-100 select-none"
-                onClick={() => onDelete(annotation.id)}
+                onClick={onDelete}
               >
                 Delete
               </button>
@@ -71,8 +65,10 @@ export default function Annotation({
         <div className="row-start-2 col-span-11 border-l-4 border-transparent pl-1 pt-1 select-none">
           <AutoTextArea
             placeholder="Add note..."
-            value={annotation.note}
-            onChange={handleInputChange}
+            value={note}
+            onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+              onNoteChange(e.target.value)
+            }
             ref={inputRef}
           />
         </div>

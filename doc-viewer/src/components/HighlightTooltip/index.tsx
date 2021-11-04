@@ -22,29 +22,17 @@ const HighlightTooltip = ({ highlightColorPickers, menuItems }: Props) => {
   );
 };
 
-const MenuItem = ({
-  text,
-  onClick,
-}: {
-  text: string;
-  onClick: (...args: Array<any>) => void;
-}) => (
-  <div className="cursor-pointer" onClick={onClick}>
-    {text}
-  </div>
-);
-
 interface DefaultHighlightTooltipProps {
   highlightColors: Array<string>;
   currentHighlightColor?: string;
-  handleHighlightColorClick: (color: string, active: boolean) => void;
+  onColorClick: (color: string, active: boolean) => void;
 }
 
 const DefaultHighlightTooltip = (props: DefaultHighlightTooltipProps) => {
   const {
     highlightColors,
     currentHighlightColor,
-    handleHighlightColorClick,
+    onColorClick: handleHighlightColorClick,
   }: DefaultHighlightTooltipProps = props;
 
   const highlightColorPickers = highlightColors.map((color) => {

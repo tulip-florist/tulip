@@ -1,53 +1,35 @@
-import React, { useContext, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 import {
   PdfLoader,
   PdfHighlighter,
   Popup,
-  AreaHighlight,
   ScaledPosition,
 } from "react-pdf-highlighter";
 
-import type { IHighlight, NewHighlight } from "react-pdf-highlighter";
+import type { IHighlight } from "react-pdf-highlighter";
 
 import { Spinner } from "./Spinner";
 
 import "../../style/App.css";
-import {
-  Annotation,
-  AnnotationNoId,
-  Color,
-  handleCreateAnnotationSignature,
-} from "../../types/types";
 import { HighlightTooltip } from "../HighlightTooltip";
 import PdfHighlight from "../PdfHighlight";
-import { GlobalContext } from "../../App";
+import { PdfAnnotation, PdfAnnotationNoId } from "./types";
 
-interface PdfAnnotationNoId extends NewHighlight {
+interface PdfAnnotationExtendsIHighligh extends IHighlight {
   color: string;
 }
 
-interface PdfAnnotation extends PdfAnnotationNoId, IHighlight {}
-
 interface Props {
   file: File;
-  handleCreateAnnotation: handleCreateAnnotationSignature;
-  highlightColors: Array<Color>;
-  annotations: Array<Annotation>;
-  onScrollToReady: (
-    scrollToFn: (position: Annotation["position"]) => void
+  annotations: Array<PdfAnnotation>;
+  highlightColors: Array<string>;
+  onCreateAnnotation: (newAnnotation: PdfAnnotationNoId) => void;
+  onScrollToHighlightReady: (
+    scrollToFn: (position: PdfAnnotation["position"]) => void
   ) => void;
-  handleClickOnHighlight?: (...args: any[]) => void;
+  onHighlightClick?: (annotation: PdfAnnotation) => void;
 }
-
-const getNextId = () => String(Math.random()).slice(2);
-
-const parseIdFromHash = () =>
-  document.location.hash.slice("#highlight-".length);
-
-const resetHash = () => {
-  document.location.hash = "";
-};
 
 const HighlightPopup = ({
   comment,
@@ -60,65 +42,44 @@ const HighlightPopup = ({
     </div>
   ) : null;
 
-const searchParams = new URLSearchParams(document.location.search);
-
-function annotationToPdfAnnotation(annotation: Annotation): PdfAnnotation {
-  return {
-    id: annotation.id,
-    color: annotation.color,
-    position: annotation.position as ScaledPosition,
-    comment: { text: annotation.note || "", emoji: "" },
-    content: { text: annotation.highlight.text },
-  };
-}
-
-function pdfAnnotationToAnnotation(pdfAnnotation: PdfAnnotation): Annotation {
+const pdfAnnotationToPdfAnnotationExtendsIHighlight = (
+  pdfAnnotation: PdfAnnotation
+): PdfAnnotationExtendsIHighligh => {
   return {
     id: pdfAnnotation.id,
     color: pdfAnnotation.color,
-    highlight: pdfAnnotation.content,
-    position: pdfAnnotation.position,
-    note: pdfAnnotation.comment.text,
+    position: pdfAnnotation.position as ScaledPosition,
+    comment: { text: pdfAnnotation.note || "", emoji: "" },
+    content: { text: pdfAnnotation.highlight },
   };
-}
+};
+
+const pdfAnnotationExtendsIHighlightToPdfAnnotation = (
+  pdfAnnotationExtendsIHighlight: PdfAnnotationExtendsIHighligh
+): PdfAnnotation => {
+  return {
+    id: pdfAnnotationExtendsIHighlight.id,
+    color: pdfAnnotationExtendsIHighlight.color,
+    position: pdfAnnotationExtendsIHighlight.position as ScaledPosition,
+    note: pdfAnnotationExtendsIHighlight.comment.text,
+    highlight: pdfAnnotationExtendsIHighlight.content.text || "",
+  };
+};
 
 const PdfViewer = ({
   annotations,
   file,
   highlightColors,
-  handleCreateAnnotation,
-  onScrollToReady,
-  handleClickOnHighlight,
+  onCreateAnnotation: handleCreateAnnotation,
+  onScrollToHighlightReady,
+  onHighlightClick: handleHighlightClick,
 }: Props) => {
-  let scrollViewerTo = (highlight: any) => {};
-
-  const scrollToHighlightFromHash = () => {
-    const highlight = getHighlightById(parseIdFromHash());
-
-    if (highlight) {
-      scrollViewerTo(highlight);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener("hashchange", scrollToHighlightFromHash, false);
-    return () => {
-      window.removeEventListener("hashchange", scrollToHighlightFromHash);
-    };
-  });
-
-  const getHighlightById = (id: string) => {
-    const highlights = annotations.map(annotationToPdfAnnotation);
-
-    return highlights.find((highlight) => highlight.id === id);
-  };
-
   const url = useMemo(() => {
     return URL.createObjectURL(file);
   }, [file]);
 
-  const highlights: Array<PdfAnnotation> = annotations.map(
-    annotationToPdfAnnotation
+  const highlights: Array<PdfAnnotationExtendsIHighligh> = annotations.map(
+    pdfAnnotationToPdfAnnotationExtendsIHighlight
   );
 
   return (
@@ -126,24 +87,23 @@ const PdfViewer = ({
       <PdfLoader url={url} beforeLoad={<Spinner />}>
         {(pdfDocument) => {
           return (
-            <PdfHighlighter<PdfAnnotation>
+            <PdfHighlighter<PdfAnnotationExtendsIHighligh>
               highlights={highlights}
               pdfDocument={pdfDocument}
               enableAreaSelection={(event) => event.altKey}
-              onScrollChange={resetHash}
-              // pdfScaleValue="page-width"
+              onScrollChange={() => {}}
               scrollRef={(scrollTo) => {
-                onScrollToReady(() => (position: PdfAnnotation["position"]) => {
-                  const fakeAnnotation: IHighlight = {
-                    comment: { emoji: "", text: "" },
-                    content: { image: "", text: "" },
-                    id: "",
-                    position: position,
-                  };
-                  scrollTo(fakeAnnotation);
-                });
-
-                // scrollToHighlightFromHash();
+                onScrollToHighlightReady(
+                  () => (position: PdfAnnotation["position"]) => {
+                    const fakeAnnotation: IHighlight = {
+                      comment: { emoji: "", text: "" },
+                      content: { image: "", text: "" },
+                      id: "",
+                      position: position,
+                    };
+                    scrollTo(fakeAnnotation);
+                  }
+                );
               }}
               onSelectionFinished={(
                 position,
@@ -156,12 +116,13 @@ const PdfViewer = ({
                 return (
                   <HighlightTooltip
                     currentHighlightColor={undefined}
-                    highlightColors={highlightColors.map((it) => it.hex)}
-                    handleHighlightColorClick={(color, active) => {
+                    highlightColors={highlightColors}
+                    onColorClick={(color: string) => {
+                      if (!content.text) return;
                       handleCreateAnnotation({
                         position,
                         color,
-                        highlight: content,
+                        highlight: content.text,
                       });
                     }}
                   />
@@ -176,34 +137,22 @@ const PdfViewer = ({
                 screenshot,
                 isScrolledTo
               ) => {
-                const isTextHighlight = !Boolean(
-                  highlight.content && highlight.content.image
-                );
-
-                const component = isTextHighlight ? (
+                const component = (
                   <PdfHighlight
                     isScrolledTo={isScrolledTo}
                     position={highlight.position}
                     color={highlight.color}
                     note={highlight?.comment?.text}
                     onClick={
-                      handleClickOnHighlight
-                        ? () => handleClickOnHighlight(highlight.id)
+                      handleHighlightClick
+                        ? () =>
+                            handleHighlightClick(
+                              pdfAnnotationExtendsIHighlightToPdfAnnotation(
+                                highlight
+                              )
+                            )
                         : undefined
                     }
-                  />
-                ) : (
-                  <AreaHighlight
-                    isScrolledTo={isScrolledTo}
-                    highlight={highlight}
-                    onChange={(boundingRect) => {
-                      // this.updateHighlight(
-                      //   highlight.id,
-                      //   { boundingRect: viewportToScaled(boundingRect) },
-                      //   { image: screenshot(boundingRect) }
-                      // );
-                      console.log("area highlight update not implemented yet");
-                    }}
                   />
                 );
 
@@ -227,25 +176,4 @@ const PdfViewer = ({
   );
 };
 
-const ConnectedPdfViewer = ({
-  annotations,
-  file,
-  highlightColors,
-  handleCreateAnnotation,
-  handleClickOnHighlight,
-}: Omit<Props, "onScrollToReady">) => {
-  const context = useContext(GlobalContext);
-
-  return (
-    <PdfViewer
-      annotations={annotations}
-      file={file}
-      highlightColors={highlightColors}
-      handleCreateAnnotation={handleCreateAnnotation}
-      onScrollToReady={context.setScrollToFn}
-      handleClickOnHighlight={handleClickOnHighlight}
-    />
-  );
-};
-
-export default ConnectedPdfViewer;
+export default PdfViewer;

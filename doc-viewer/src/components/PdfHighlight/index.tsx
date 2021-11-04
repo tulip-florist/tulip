@@ -1,5 +1,5 @@
 import React from "react";
-import { LTWH } from "../../types/types";
+import { LTWH } from "./types";
 
 import "./Highlight.css";
 
@@ -24,7 +24,7 @@ export const PdfHighlight = ({
   color,
   isScrolledTo,
 }: Props) => {
-  const { rects, boundingRect } = position;
+  const { rects } = position;
   const bgStyle = color ? { backgroundColor: color } : undefined;
 
   return (

@@ -1,23 +1,24 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { Annotation as AnnotationType } from "../../types/types";
+import React, { useCallback, useEffect, useMemo } from "react";
+import { EpubAnnotation } from "../EpubReader/types";
+import { PdfAnnotation } from "../PdfReader/types";
 
-interface Props {
-  annotations: Array<AnnotationType>;
+interface Props<T extends PdfAnnotation | EpubAnnotation> {
+  annotations: Array<T>;
   children: (args: {
-    annotation: AnnotationType;
+    annotation: T;
     containerRef: React.RefObject<HTMLDivElement>;
     inputRef: React.RefObject<HTMLTextAreaElement>;
   }) => React.ReactElement;
-  onScrollToAnnotationReady: (fn: (id: AnnotationType["id"]) => void) => void;
-  onFocusAnnotationInputReady: (fn: (id: AnnotationType["id"]) => void) => void;
+  onScrollToAnnotationReady: (fn: (id: T["id"]) => void) => void;
+  onFocusAnnotationInputReady: (fn: (id: T["id"]) => void) => void;
 }
 
-export const AnnotationList = <T extends AnnotationType>({
+export function AnnotationList<T extends PdfAnnotation | EpubAnnotation>({
   annotations,
   children,
   onScrollToAnnotationReady,
   onFocusAnnotationInputReady,
-}: Props) => {
+}: Props<T>) {
   const containerRefs = useMemo(
     () =>
       annotations.reduce(
@@ -60,24 +61,30 @@ export const AnnotationList = <T extends AnnotationType>({
     });
   });
 
-  const scrollToElementInList = (id: AnnotationType["id"]) => {
-    containerRefs[id]?.current?.scrollIntoView({
-      behavior: "auto",
-      block: "start",
-    });
-  };
+  const scrollToElementInList = useCallback(
+    (id: T["id"]) => {
+      containerRefs[id]?.current?.scrollIntoView({
+        behavior: "auto",
+        block: "start",
+      });
+    },
+    [containerRefs]
+  );
 
   useEffect(() => {
     onScrollToAnnotationReady(scrollToElementInList);
-  }, [annotations, onScrollToAnnotationReady]);
+  }, [annotations, onScrollToAnnotationReady, scrollToElementInList]);
 
-  const focusAnnotationInput = (id: AnnotationType["id"]) => {
-    inputRefs[id]?.current?.focus({ preventScroll: false });
-  };
+  const focusAnnotationInput = useCallback(
+    (id: T["id"]) => {
+      inputRefs[id]?.current?.focus({ preventScroll: false });
+    },
+    [inputRefs]
+  );
 
   useEffect(() => {
     onFocusAnnotationInputReady(focusAnnotationInput);
-  }, [annotations, onFocusAnnotationInputReady]);
+  }, [annotations, focusAnnotationInput, onFocusAnnotationInputReady]);
 
   return <>{elements}</>;
-};
+}
