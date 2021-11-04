@@ -14,6 +14,7 @@ interface Props {
   highlightColors: Array<Color>;
   annotations: Array<EpubAnnotation>;
   handleCreateAnnotation: handleCreateAnnotationSignature;
+  handleClickOnHighlight?: (...args: any[]) => void;
 }
 
 export default function EpubReader({
@@ -21,6 +22,7 @@ export default function EpubReader({
   highlightColors,
   annotations,
   handleCreateAnnotation,
+  handleClickOnHighlight,
 }: Props): ReactElement {
   const viewerRef = useRef<HTMLDivElement>(null);
   const [book, setBook] = useState<Book>();
@@ -83,23 +85,22 @@ export default function EpubReader({
     [navigateRendition]
   );
 
-  const highlightDocText = useCallback(
-    (cfiRange: string, color: string) => {
+  const createHighlightInDoc = useCallback(
+    (annotationId: EpubAnnotation["id"], cfiRange: string, color: string) => {
       rendition?.annotations.highlight(
         cfiRange,
         undefined,
-        (e: any) => {
-          // TODO: scroll to annotation in annotation-side panel
-          console.log("highlight clicked", e.target);
+        () => {
+          if (handleClickOnHighlight) handleClickOnHighlight(annotationId);
         },
         undefined,
         { fill: color }
       );
     },
-    [rendition]
+    [rendition, handleClickOnHighlight]
   );
 
-  const removeDocTextHighlight = useCallback(
+  const removeHighlightInDoc = useCallback(
     (cifRange: string) => {
       rendition?.annotations.remove(cifRange, "highlight");
     },
@@ -234,15 +235,19 @@ export default function EpubReader({
 
   useEffect(() => {
     annotations.forEach((annotation) => {
-      highlightDocText(annotation.position.cfiRange, annotation.color);
+      createHighlightInDoc(
+        annotation.id,
+        annotation.position.cfiRange,
+        annotation.color
+      );
     });
 
     return () => {
       annotations.forEach((annotation) => {
-        removeDocTextHighlight(annotation.position.cfiRange);
+        removeHighlightInDoc(annotation.position.cfiRange);
       });
     };
-  }, [annotations, removeDocTextHighlight, highlightDocText]);
+  }, [annotations, removeHighlightInDoc, createHighlightInDoc]);
 
   return (
     <>

@@ -56,9 +56,10 @@ export default function DocumentReader({
       ) : (
         <EpubReader
           file={file}
-          highlightColors={highlightColors}
           annotations={annotations as Array<EpubAnnotation>}
           handleCreateAnnotation={handleCreateAnnotation}
+          highlightColors={highlightColors}
+          handleClickOnHighlight={handleClickOnHighlight}
         />
       )}
     </>
