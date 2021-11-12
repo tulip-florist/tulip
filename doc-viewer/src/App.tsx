@@ -1,28 +1,28 @@
-import React, { useState } from "react";
-import DocumentReader from "./components/DocumentReader/DocumentReader";
-import FileInput from "./components/FileInput";
-import { hashFile } from "./util";
+import React, { createContext, useState } from "react";
+import { DocumentReaderView } from "./components/DocumentReaderView";
+import { User } from "./types/types";
+
+interface IUserContext {
+  user: User | null;
+  setUser: (user: User) => void;
+}
+
+export const UserContext = createContext<IUserContext>({
+  user: null,
+  setUser: () => {
+    throw new Error("user context not initialised yet");
+  },
+});
+
 const App = () => {
-  const [file, setFile] = useState<File | null>(null);
-
-  const handleFileInputChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { files } = event.target;
-    const file = files?.[0] || null;
-    if (file) {
-      setFile(file);
-      console.log("file input change: ", files);
-
-      const fileHash = await hashFile(file);
-      console.log("fileHash", fileHash);
-    }
-  };
+  const [user, setUser] = useState<User | null>(null);
   return (
     <div>
-      <h1>Tulip 🌷</h1>
-      <FileInput handleInputChange={handleFileInputChange} />
-      {file && <DocumentReader file={file} />}
+      <UserContext.Provider
+        value={{ user, setUser: (user: User) => setUser(user) }}
+      >
+        <DocumentReaderView />
+      </UserContext.Provider>
     </div>
   );
 };

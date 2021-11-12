@@ -17,6 +17,7 @@ export enum ActionTypes {
   CREATE_ANNOTATION = "ADD_ANNOTATION",
   DELETE_ANNOTATION = "DELETE_ANNOTATION",
   UPDATE_ANNOTATION = "UPDATE_ANNOTATION",
+  SET_ANNOTATIONS = "SET_ANNOTATION",
 }
 
 export type Action =
@@ -31,4 +32,22 @@ export type Action =
         annotationId: string;
         propsToUpdate: Partial<Omit<Annotation, "id">>;
       };
+    }
+  | {
+      type: ActionTypes.SET_ANNOTATIONS;
+      payload: { annotations: Array<Annotation> };
     };
+
+export interface User {
+  id: string;
+}
+
+export interface Doc {
+  hash: string
+  annotations: Array<Annotation>
+}
+
+export interface FileWithHash {
+  file: File
+  fileHash: string
+}

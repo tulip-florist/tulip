@@ -47,7 +47,7 @@
 //   console.log("ebook", epubBook);
 // };
 
-export const hashFile = async (file: File) => {
+export const getFileHash = async (file: File) => {
     // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#converting_a_digest_to_a_hex_string
     const digest = await crypto.subtle.digest(
       "SHA-256",

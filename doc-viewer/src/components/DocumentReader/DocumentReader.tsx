@@ -1,11 +1,14 @@
 import { EpubCFI } from "epubjs";
-import React, { useState, useReducer, useCallback } from "react";
+import React, { useState, useReducer, useCallback, useEffect } from "react";
 import SplitPane from "react-split-pane";
 import {
   Action,
   FileTypes,
   Annotation as AnnotationType,
   ActionTypes,
+  User,
+  Doc,
+  FileWithHash,
 } from "../../types/types";
 import Annotation from "../Annotation";
 import { AnnotationList } from "../AnnotationList";
@@ -14,9 +17,11 @@ import { EpubAnnotation } from "../EpubReader/types";
 import PdfReader from "../PdfReader";
 import { PdfAnnotation } from "../PdfReader/types";
 import "../../style/reactSplitPane.css";
+import * as API from "../../util/api";
 
 interface Props {
-  file: File;
+  fileWithHash: FileWithHash;
+  user?: User;
 }
 
 const fileTypes: { pdf: FileTypes; epub: FileTypes } = {
@@ -58,6 +63,9 @@ const annotationsReducer = (
 
       return updatedAnnotations;
     }
+    case ActionTypes.SET_ANNOTATIONS: {
+      return action.payload.annotations;
+    }
     default:
       throw new Error("Not a valid action for annotationReducer");
   }
@@ -73,9 +81,79 @@ const defaultHighlightColors: Array<string> = [
   "#A78FEB",
 ];
 
-export const DocumentReader = ({ file }: Props) => {
+export const DocumentReader = ({ fileWithHash, user }: Props) => {
   const [annotations, dispatch] = useReducer(annotationsReducer, []);
   const [highlightColors] = useState(defaultHighlightColors);
+  const [isSynced, setIsSynced] = useState<boolean>(false);
+  const { file, fileHash } = fileWithHash;
+
+  const syncDocumentToServer = useCallback(async () => {
+    console.log("sync to server");
+    API.setDocument({ hash: fileHash, annotations });
+    setIsSynced(true);
+  }, [annotations, fileHash]);
+
+  const syncDocumentToLocalStorage = useCallback(async () => {
+    const hash = fileHash;
+    const doc: Doc = {
+      hash,
+      annotations,
+    };
+    localStorage.setItem(hash, JSON.stringify(doc));
+    console.log("sync to local storage");
+  }, [annotations, fileHash]);
+
+  // Get data for the file from local storage
+  useEffect(() => {
+    (async () => {
+      const storedData = localStorage.getItem(fileHash);
+      if (storedData) {
+        const doc: Doc = JSON.parse(storedData);
+        dispatch({
+          type: ActionTypes.SET_ANNOTATIONS,
+          payload: { annotations: doc.annotations },
+        });
+      }
+    })();
+  }, [fileHash]);
+
+  // On user login, sync data from server
+  useEffect(() => {
+    (async () => {
+      if (!user) return;
+
+      const doc = await API.getDocument({ hash: fileHash });
+
+      if (doc?.annotations) {
+        // sync backend to frontend
+        dispatch({
+          type: ActionTypes.SET_ANNOTATIONS,
+          payload: { annotations: doc.annotations },
+        });
+      }
+    })();
+  }, [user, fileHash]);
+
+  // Sync to server every n seconds
+  useEffect(() => {
+    const timer = setInterval(() => syncDocumentToServer(), 10000);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [syncDocumentToServer]);
+
+  // Save to local storage every n seconds
+  useEffect(() => {
+    const timer = setInterval(() => syncDocumentToLocalStorage(), 5000);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [syncDocumentToLocalStorage]);
+
+  // Set isSynced to false on every state change
+  useEffect(() => {
+    setIsSynced(false);
+  }, [file, annotations]);
 
   const [
     scrollToHighlightInDocument,
