@@ -11,8 +11,12 @@ export const emailRegister = async ({
 }: {
   email: string;
   password: string;
-}): Promise<User> => {
-  return new Promise((resolve) => resolve({ id: "test user id" }));
+}): Promise<void> => {
+  try {
+    await axios.post("/auth/emailSignup", { email, password });
+  } catch (error) {
+    console.log((error as Error).message);
+  }
 };
 
 export const emailLogin = async ({
@@ -22,30 +26,22 @@ export const emailLogin = async ({
   email: string;
   password: string;
 }): Promise<User> => {
-  return new Promise((resolve) => resolve({ id: "asdf" }));
+  const res = await axios.post("/auth/emailSignin", { email, password });
+  const user: User = {
+    id: res.data.userId,
+  };
+  return user;
 };
 
-export const getDocument = async ({
-  hash,
-}: {
-  hash: string;
-}): Promise<Doc | null> => {
-  return new Promise((resolve) => {
-    const doc = {
-      id: "asdf",
-      hash: "test hash",
-      annotations: [
-        {
-          color: "asdf",
-          highlight: "asdf",
-          id: "asdf",
-          position: "asdf",
-          note: "asdf",
-        },
-      ],
-    };
-    resolve(doc);
+export const getDocument = async (documentHash: Doc["documentHash"]) => {
+  const res = await axios.get("/document/getByHash", {
+    params: { documentHash },
+  });
+  return res.data;
+};
+
+export const setDocument = async (document: Doc) => {
+  await axios.put("/document/setByHash", {
+    document,
   });
 };
-
-export const setDocument = async (doc: Doc): Promise<void> => {};

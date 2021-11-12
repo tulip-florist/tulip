@@ -21,7 +21,7 @@ import * as API from "../../util/api";
 
 interface Props {
   fileWithHash: FileWithHash;
-  user?: User;
+  user: User | null;
 }
 
 const fileTypes: { pdf: FileTypes; epub: FileTypes } = {
@@ -89,17 +89,16 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
 
   const syncDocumentToServer = useCallback(async () => {
     console.log("sync to server");
-    API.setDocument({ hash: fileHash, annotations });
+    API.setDocument({ documentHash: fileHash, annotations });
     setIsSynced(true);
   }, [annotations, fileHash]);
 
   const syncDocumentToLocalStorage = useCallback(async () => {
-    const hash = fileHash;
     const doc: Doc = {
-      hash,
+      documentHash: fileHash,
       annotations,
     };
-    localStorage.setItem(hash, JSON.stringify(doc));
+    localStorage.setItem(fileHash, JSON.stringify(doc));
     console.log("sync to local storage");
   }, [annotations, fileHash]);
 
@@ -122,7 +121,7 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
     (async () => {
       if (!user) return;
 
-      const doc = await API.getDocument({ hash: fileHash });
+      const doc = await API.getDocument(fileHash);
 
       if (doc?.annotations) {
         // sync backend to frontend

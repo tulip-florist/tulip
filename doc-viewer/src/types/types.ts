@@ -43,11 +43,11 @@ export interface User {
 }
 
 export interface Doc {
-  hash: string
-  annotations: Array<Annotation>
+  documentHash: string;
+  annotations: Array<Annotation>;
 }
 
 export interface FileWithHash {
-  file: File
-  fileHash: string
+  file: File;
+  fileHash: string;
 }
