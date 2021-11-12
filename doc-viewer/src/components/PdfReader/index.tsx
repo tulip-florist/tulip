@@ -94,7 +94,7 @@ const PdfViewer = ({
               onScrollChange={() => {}}
               scrollRef={(scrollTo) => {
                 onScrollToHighlightReady(
-                  () => (position: PdfAnnotation["position"]) => {
+                  (position: PdfAnnotation["position"]) => {
                     const fakeAnnotation: IHighlight = {
                       comment: { emoji: "", text: "" },
                       content: { image: "", text: "" },
