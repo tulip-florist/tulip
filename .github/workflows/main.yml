@@ -11,6 +11,8 @@ jobs:
   build:
     name: Create production build
     runs-on: ubuntu-latest
+    env:
+      REACT_APP_API_BASE_URL: ${{ secrets.REACT_APP_API_BASE_URL }}
 
     defaults:
       run:
