@@ -25,6 +25,7 @@ import { PdfAnnotation } from "../PdfReader/types";
 import "../../style/reactSplitPane.css";
 import * as API from "../../util/api";
 import { getFileType } from "../../util";
+import { v4 as uuidv4 } from "uuid";
 
 interface Props {
   fileWithHash: FileWithHash;
@@ -37,8 +38,7 @@ const annotationsReducer = (
 ) => {
   switch (action.type) {
     case ActionTypes.CREATE_ANNOTATION: {
-      const newId = Math.random().toString();
-      const newAnnotation = { ...action.payload.annotation, id: newId };
+      const newAnnotation = { ...action.payload.annotation, id: uuidv4() };
       const updatedAnnotations: Array<AnnotationType> = [
         ...annotations,
         newAnnotation,
