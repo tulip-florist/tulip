@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useEffect,
   useRef,
+  useMemo,
 } from "react";
 import {
   Action,
@@ -22,11 +23,16 @@ import { EpubAnnotation } from "../EpubReader/types";
 import PdfReader from "../PdfReader";
 import { PdfAnnotation } from "../PdfReader/types";
 import "../../style/reactSplitPane.css";
-import * as API from "../../util/api";
-import { getFileType } from "../../util";
+import {
+  compareDocs,
+  getFileType,
+  LocalStorageAPI,
+  SyncUtil,
+} from "../../util";
 import { v4 as uuidv4 } from "uuid";
 import Split from "react-split";
-
+import { debounce } from "lodash";
+import { useInitialMount } from "../../hooks/useIsInitialMount";
 interface Props {
   fileWithHash: FileWithHash;
   user: User | null;
@@ -66,9 +72,11 @@ const annotationsReducer = (
       return updatedAnnotations;
     }
     case ActionTypes.SET_ANNOTATIONS: {
+      debugger;
       return action.payload.annotations;
     }
     case ActionTypes.CLEAR_ANNOTATIONS: {
+      debugger;
       return [];
     }
     default:
@@ -99,6 +107,8 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
   const [highlightColors] = useState(defaultHighlightColors);
   const { file, fileHash } = fileWithHash;
   const currentFileHash = useRef(fileWithHash.fileHash);
+  const isInitialMount = useInitialMount();
+  const SYNC_DEBOUNCE_TIME = 1000; //ms
 
   const [focusAnnotationInputInList, setFocusAnnotationInputInList] = useState<
     ((id: AnnotationType["id"]) => void) | undefined
@@ -108,76 +118,92 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
     ((id: AnnotationType["id"]) => void) | undefined
   >();
 
-  const syncDocumentToServer = useCallback(async () => {
-    console.log("sync to server");
-    API.setDocument({ documentHash: fileHash, annotations });
-  }, [annotations, fileHash]);
-
-  const syncDocumentToLocalStorage = useCallback(async () => {
-    const doc: Doc = {
-      documentHash: fileHash,
-      annotations,
-    };
-    localStorage.setItem(fileHash, JSON.stringify(doc));
-    console.log("sync to local storage");
-  }, [annotations, fileHash]);
-
   // Update current file ref
   useEffect(() => {
-    console.log(fileWithHash.fileHash, currentFileHash.current);
     currentFileHash.current = fileWithHash.fileHash;
   }, [fileWithHash]);
 
   useEffect(() => {
+    debugger;
     dispatch({ type: ActionTypes.CLEAR_ANNOTATIONS });
   }, [fileWithHash]);
 
   // Get data for the file from local storage
   useEffect(() => {
-    (async () => {
-      const storedData = localStorage.getItem(fileHash);
-      if (storedData) {
-        const doc: Doc = JSON.parse(storedData);
-        dispatch({
-          type: ActionTypes.SET_ANNOTATIONS,
-          payload: { annotations: doc.annotations },
-        });
-      }
-    })();
+    if (currentFileHash.current !== fileHash) return;
+    debugger;
+    const doc = LocalStorageAPI.getDocument(fileHash);
+    if (doc) {
+      dispatch({
+        type: ActionTypes.SET_ANNOTATIONS,
+        payload: { annotations: doc.annotations },
+      });
+    }
   }, [fileHash]);
 
-  // On user login, sync data from server
-  useEffect(() => {
-    (async () => {
-      if (!user) return;
+  // // On user login, sync data from server
+  // useEffect(() => {
+  //   (async () => {
+  //     if (!user) return;
 
-      const doc = await API.getDocument(fileHash);
+  //     const syncedDoc = SyncUtil.syncDocWithBackend({documentHash: fileHash, annotations})
 
-      if (doc?.annotations) {
-        // sync backend to frontend
+  //     // const doc = await API.getDocument(fileHash);
+
+  //     // if (doc?.annotations) {
+  //     //   // sync backend to frontend
+  //     //   dispatch({
+  //     //     type: ActionTypes.SET_ANNOTATIONS,
+  //     //     payload: { annotations: doc.annotations },
+  //     //   });
+  //     // }
+  //   })();
+  // }, [user, fileHash]);
+
+  const syncServerDebounce = useMemo(() => {
+    const sync = (annotations: any, fileHash: any) => {
+      const currentDoc: Doc = { documentHash: fileHash, annotations };
+      SyncUtil.syncDocWithBackend(currentDoc).then((syncedDoc) => {
         dispatch({
           type: ActionTypes.SET_ANNOTATIONS,
-          payload: { annotations: doc.annotations },
+          payload: { annotations: syncedDoc.annotations },
         });
-      }
-    })();
-  }, [user, fileHash]);
-
-  // Sync to server every n seconds
-  useEffect(() => {
-    const timer = setInterval(() => syncDocumentToServer(), 10000);
-    return () => {
-      clearInterval(timer);
+      });
     };
-  }, [syncDocumentToServer]);
+    return debounce(sync, SYNC_DEBOUNCE_TIME);
+  }, []);
 
-  // Save to local storage every n seconds
   useEffect(() => {
-    const timer = setInterval(() => syncDocumentToLocalStorage(), 5000);
     return () => {
-      clearInterval(timer);
+      syncServerDebounce.cancel();
     };
-  }, [syncDocumentToLocalStorage]);
+  }, [syncServerDebounce]);
+
+  // Sync data when annotations change (with debounce)
+  useEffect(() => {
+    debugger;
+    if (currentFileHash.current !== fileHash) return;
+
+    if (isInitialMount) return;
+    const currentDoc: Doc = { documentHash: fileHash, annotations };
+
+    // First, save app state to local storage
+    LocalStorageAPI.setDocument(currentDoc);
+    debugger;
+    // Check if user exists, else return
+    if (!user) return;
+
+    // If lastSynced is the same as the current app state, do nothing
+    const lastSyncedDoc = LocalStorageAPI.getSyncedVersionOfDocument(fileHash);
+    const docsAreSame = compareDocs(currentDoc, lastSyncedDoc || undefined);
+
+    debugger;
+    if (docsAreSame) return;
+    debugger;
+
+    // Else, merge the 3 states, update lastSynced, return the merged object and update the app state
+    syncServerDebounce(annotations, fileHash);
+  }, [annotations, fileHash, isInitialMount, syncServerDebounce, user]);
 
   const [
     scrollToHighlightInDocument,

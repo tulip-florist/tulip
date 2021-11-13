@@ -2,7 +2,8 @@ import { Doc, User } from "../types/types";
 import axios from "./axios";
 
 export const getUser = async (): Promise<User> => {
-  return new Promise((resolve) => resolve({ id: "test id" }));
+  const res = await axios.get("/auth/me");
+  return res.data.user;
 };
 
 export const emailRegister = async ({
@@ -33,11 +34,17 @@ export const emailLogin = async ({
   return user;
 };
 
-export const getDocument = async (documentHash: Doc["documentHash"]) => {
-  const res = await axios.get("/document/getByHash", {
-    params: { documentHash },
-  });
-  return res.data;
+export const getDocument = async (
+  documentHash: Doc["documentHash"]
+): Promise<Doc | null> => {
+  try {
+    const res = await axios.get("/document/getByHash", {
+      params: { documentHash },
+    });
+    return res.data;
+  } catch (e) {
+    return null;
+  }
 };
 
 export const setDocument = async (document: Doc) => {

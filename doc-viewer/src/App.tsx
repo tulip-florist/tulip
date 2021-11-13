@@ -4,7 +4,7 @@ import { User } from "./types/types";
 
 interface IUserContext {
   user: User | null;
-  setUser: (user: User) => void;
+  setUser: (user: User | null) => void;
 }
 
 export const UserContext = createContext<IUserContext>({
@@ -18,9 +18,7 @@ const App = () => {
   const [user, setUser] = useState<User | null>(null);
   return (
     <div className="h-screen w-screen">
-      <UserContext.Provider
-        value={{ user, setUser: (user: User) => setUser(user) }}
-      >
+      <UserContext.Provider value={{ user, setUser: (user) => setUser(user) }}>
         <DocumentReaderView />
       </UserContext.Provider>
     </div>
