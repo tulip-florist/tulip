@@ -5,6 +5,8 @@
 // } from "pdfjs-dist/legacy/build/pdf";
 // import ePub from "epubjs";
 
+import { FileTypes } from "../types/types";
+
 // export const extractPdfMetaData = async (file: File) => {
 //   if (file.type !== "application/pdf") {
 //     throw Error("Provided files is not a PDF file");
@@ -58,4 +60,14 @@ export const getFileHash = async (file: File) => {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join(""); // convert bytes to hex string
     return hashHex;
+  };
+
+  export const getFileType = (file: File): FileTypes | undefined => {
+    if (file.type === FileTypes.pdf) {
+      return FileTypes.pdf
+    } else if (file.type === FileTypes.epub) {
+      return FileTypes.epub
+    } else {
+      return undefined;
+    }
   };

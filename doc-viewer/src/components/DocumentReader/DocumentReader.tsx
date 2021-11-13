@@ -1,5 +1,11 @@
 import { EpubCFI } from "epubjs";
-import React, { useState, useReducer, useCallback, useEffect } from "react";
+import React, {
+  useState,
+  useReducer,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import SplitPane from "react-split-pane";
 import {
   Action,
@@ -18,16 +24,12 @@ import PdfReader from "../PdfReader";
 import { PdfAnnotation } from "../PdfReader/types";
 import "../../style/reactSplitPane.css";
 import * as API from "../../util/api";
+import { getFileType } from "../../util";
 
 interface Props {
   fileWithHash: FileWithHash;
   user: User | null;
 }
-
-const fileTypes: { pdf: FileTypes; epub: FileTypes } = {
-  pdf: "application/pdf",
-  epub: "application/epub+zip",
-};
 
 const annotationsReducer = (
   annotations: Array<AnnotationType>,
@@ -66,6 +68,9 @@ const annotationsReducer = (
     case ActionTypes.SET_ANNOTATIONS: {
       return action.payload.annotations;
     }
+    case ActionTypes.CLEAR_ANNOTATIONS: {
+      return [];
+    }
     default:
       throw new Error("Not a valid action for annotationReducer");
   }
@@ -84,13 +89,20 @@ const defaultHighlightColors: Array<string> = [
 export const DocumentReader = ({ fileWithHash, user }: Props) => {
   const [annotations, dispatch] = useReducer(annotationsReducer, []);
   const [highlightColors] = useState(defaultHighlightColors);
-  const [isSynced, setIsSynced] = useState<boolean>(false);
   const { file, fileHash } = fileWithHash;
+  const currentFileHash = useRef(fileWithHash.fileHash);
+
+  const [focusAnnotationInputInList, setFocusAnnotationInputInList] = useState<
+    ((id: AnnotationType["id"]) => void) | undefined
+  >();
+
+  const [scrollToAnnotationInList, setScrollToAnnotationInList] = useState<
+    ((id: AnnotationType["id"]) => void) | undefined
+  >();
 
   const syncDocumentToServer = useCallback(async () => {
     console.log("sync to server");
     API.setDocument({ documentHash: fileHash, annotations });
-    setIsSynced(true);
   }, [annotations, fileHash]);
 
   const syncDocumentToLocalStorage = useCallback(async () => {
@@ -101,6 +113,16 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
     localStorage.setItem(fileHash, JSON.stringify(doc));
     console.log("sync to local storage");
   }, [annotations, fileHash]);
+
+  // Update current file ref
+  useEffect(() => {
+    console.log(fileWithHash.fileHash, currentFileHash.current);
+    currentFileHash.current = fileWithHash.fileHash;
+  }, [fileWithHash]);
+
+  useEffect(() => {
+    dispatch({ type: ActionTypes.CLEAR_ANNOTATIONS });
+  }, [fileWithHash]);
 
   // Get data for the file from local storage
   useEffect(() => {
@@ -149,11 +171,6 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
     };
   }, [syncDocumentToLocalStorage]);
 
-  // Set isSynced to false on every state change
-  useEffect(() => {
-    setIsSynced(false);
-  }, [file, annotations]);
-
   const [
     scrollToHighlightInDocument,
     setScrollToHighlightInDocument,
@@ -161,23 +178,15 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
     console.log("scroll to not set")
   );
 
-  const [scrollToAnnotationInList, setScrollToAnnotationInList] = useState<
-    ((id: AnnotationType["id"]) => void) | undefined
-  >();
+  const setScrollToAnnotationInListCallback = useCallback(
+    (fn) => setScrollToAnnotationInList(() => fn),
+    [setScrollToAnnotationInList]
+  );
 
-  const [focusAnnotationInputInList, setFocusAnnotationInputInList] = useState<
-    ((id: AnnotationType["id"]) => void) | undefined
-  >();
-
-  const getFileType = (file: File): FileTypes | undefined => {
-    if (file.type === "application/pdf") {
-      return fileTypes.pdf;
-    } else if (file.type === "application/epub+zip") {
-      return fileTypes.epub;
-    } else {
-      return undefined;
-    }
-  };
+  const setFocusAnnotationInputInListCallback = useCallback(
+    (fn) => setFocusAnnotationInputInList(() => fn),
+    [setFocusAnnotationInputInList]
+  );
 
   // SCROLL TO'S
   const handleHighlightClick = (annotation: AnnotationType) => {
@@ -262,7 +271,7 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
     <div className="App">
       <SplitPane split="vertical" maxSize={-300} defaultSize={1100}>
         <div className="pr-2 h-full w-full">
-          {getFileType(file) === fileTypes.epub ? (
+          {getFileType(file) === FileTypes.epub ? (
             <EpubReader
               file={file}
               annotations={annotations as Array<EpubAnnotation>}
@@ -284,40 +293,40 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
         </div>
         <div className="h-full overflow-y-auto">
           <div className="flex flex-col px-2 py-1">
-            <AnnotationList
-              annotations={annotations.sort(
-                getFileType(file) === fileTypes.epub
-                  ? sortEpubAnnotationsByPositition
-                  : sortPdfAnnotationsByPosition
-              )}
-              onScrollToAnnotationReady={useCallback(
-                (fn) => setScrollToAnnotationInList(() => fn),
-                [setScrollToAnnotationInList]
-              )}
-              onFocusAnnotationInputReady={useCallback(
-                (fn) => setFocusAnnotationInputInList(() => fn),
-                [setFocusAnnotationInputInList]
-              )}
-            >
-              {({ annotation, containerRef, inputRef }) => {
-                return (
-                  <div className="py-1 ..." key={annotation.id}>
-                    <AnnotationMemo
-                      highlight={annotation.highlight}
-                      note={annotation.note}
-                      color={annotation.color}
-                      containerRef={containerRef}
-                      inputRef={inputRef}
-                      onNoteChange={(note: string) =>
-                        handleAnnotationNoteUpateMemo(annotation.id, note)
-                      }
-                      onDelete={() => handleDeleteAnnotationMemo(annotation.id)}
-                      onClick={() => handleAnnotationClick(annotation)} // TODO
-                    />
-                  </div>
-                );
-              }}
-            </AnnotationList>
+            {fileWithHash.fileHash === currentFileHash.current && (
+              <AnnotationList
+                annotations={annotations.sort(
+                  getFileType(file) === FileTypes.epub
+                    ? sortEpubAnnotationsByPositition
+                    : sortPdfAnnotationsByPosition
+                )}
+                onScrollToAnnotationReady={setScrollToAnnotationInListCallback}
+                onFocusAnnotationInputReady={
+                  setFocusAnnotationInputInListCallback
+                }
+              >
+                {({ annotation, containerRef, inputRef }) => {
+                  return (
+                    <div className="py-1 ..." key={annotation.id}>
+                      <AnnotationMemo
+                        highlight={annotation.highlight}
+                        note={annotation.note}
+                        color={annotation.color}
+                        containerRef={containerRef}
+                        inputRef={inputRef}
+                        onNoteChange={(note: string) =>
+                          handleAnnotationNoteUpateMemo(annotation.id, note)
+                        }
+                        onDelete={() =>
+                          handleDeleteAnnotationMemo(annotation.id)
+                        }
+                        onClick={() => handleAnnotationClick(annotation)} // TODO
+                      />
+                    </div>
+                  );
+                }}
+              </AnnotationList>
+            )}
           </div>
         </div>
       </SplitPane>

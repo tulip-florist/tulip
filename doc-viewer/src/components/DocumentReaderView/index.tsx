@@ -4,23 +4,15 @@ import FileInput from "../FileInput";
 import { getFileHash } from "../../util";
 import * as API from "../../util/api";
 import { UserContext } from "../../App";
+import { FileWithHash } from "../../types/types";
 
 export const DocumentReaderView = () => {
-  const [file, setFile] = useState<File | null>(null);
-  const [fileHash, setFileHash] = useState<string | null>(null);
+  const [fileWithHash, setFileWithHash] = useState<FileWithHash | null>(null);
   const { user, setUser } = useContext(UserContext);
 
   // TODO extract into login/register component
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  useEffect(() => {
-    (async () => {
-      if (file) {
-        setFileHash(await getFileHash(file));
-      }
-    })();
-  }, [file]);
 
   // If JWT in local storage, get and set user
   useEffect(() => {
@@ -40,7 +32,7 @@ export const DocumentReaderView = () => {
     const { files } = event.target;
     const file = files?.[0] || null;
     if (file) {
-      setFile(file);
+      setFileWithHash({ file, fileHash: await getFileHash(file) });
     }
   };
 
@@ -92,8 +84,8 @@ export const DocumentReaderView = () => {
           </button>
         </div>
       )}
-      {file && fileHash && (
-        <DocumentReader fileWithHash={{ file, fileHash }} user={user} />
+      {fileWithHash && (
+        <DocumentReader fileWithHash={fileWithHash} user={user} />
       )}
     </div>
   );
