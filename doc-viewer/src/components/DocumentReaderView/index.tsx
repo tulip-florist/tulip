@@ -1,30 +1,46 @@
 import React, { useContext, useEffect, useState } from "react";
 import DocumentReader from "../DocumentReader/DocumentReader";
 import FileInput from "../FileInput";
-import { getFileHash } from "../../util";
+import { getFileHash, LocalStorageAPI, SyncUtil } from "../../util";
 import * as API from "../../util/api";
 import { UserContext } from "../../App";
 import { FileWithHash } from "../../types/types";
+import { Logger } from "../../util/logging";
+import { NavBar } from "../NavBar";
+import { UserProfile } from "../UserProfile";
+import { EmailLoginRegister } from "../EmailLoginRegister";
+import { useUserLogout } from "../../hooks";
 
 export const DocumentReaderView = () => {
   const [fileWithHash, setFileWithHash] = useState<FileWithHash | null>(null);
   const { user, setUser } = useContext(UserContext);
-
-  // TODO extract into login/register component
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const handleLogout = useUserLogout();
 
   // If JWT in local storage, get and set user
   useEffect(() => {
-    // TODO implement /me endpoint
-    // (async () => {
-    //   const jwt = localStorage.getItem("jwt");
-    //   if (jwt && !user) {
-    //     const u = await API.getUser();
-    //     setUser(u);
-    //   }
-    // })();
+    (async () => {
+      const jwt = LocalStorageAPI.getAuth();
+
+      if (jwt && !user) {
+        Logger.info(
+          "DocumentReaderView,(useEffect),:fetching user from local jwt"
+        );
+        const fetchedUser = await API.getUser();
+        setUser(fetchedUser);
+      }
+    })();
   }, [setUser, user]);
+
+  // Sync all local documents with the server (merge)
+  // Use case: User made local changes to different files, and all should be synced when use logs in / goes online
+  // useEffect(() => {
+  //   if (!user) return;
+
+  //   const localDocs = LocalStorageAPI.getAllDocuments();
+  //   localDocs.forEach((it) => {
+  //     SyncUtil.syncDocWithBackend(it);
+  //   });
+  // }, [user]);
 
   const handleFileInputChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -58,34 +74,30 @@ export const DocumentReaderView = () => {
 
   return (
     <div>
-      <h1>Tulip 🌷</h1>
-      <FileInput handleInputChange={handleFileInputChange} />
-      {user ? (
-        <p>Logged in: {user.id}</p>
-      ) : (
-        <div>
-          <input
-            placeholder="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            placeholder="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button onClick={() => handleEmailRegister({ email, password })}>
-            Register
-          </button>
-          <button onClick={() => handleEmailLogin({ email, password })}>
-            Login
-          </button>
+      <NavBar>
+        <div className="flex justify-between">
+          <div>
+            <span>Tulip 🌷</span>
+            <span className="text-gray-400 ml-1 mr-2">|</span>
+            <FileInput handleInputChange={handleFileInputChange} />
+          </div>
+          <div>
+            {user ? (
+              <UserProfile user={user} onLogout={handleLogout} />
+            ) : (
+              <EmailLoginRegister
+                onLogin={handleEmailLogin}
+                onRegister={handleEmailRegister}
+              />
+            )}
+          </div>
         </div>
-      )}
-      {fileWithHash && (
+      </NavBar>
+
+      {fileWithHash ? (
         <DocumentReader fileWithHash={fileWithHash} user={user} />
+      ) : (
+        <h1>Open file</h1>
       )}
     </div>
   );

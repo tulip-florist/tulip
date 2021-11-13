@@ -1,4 +1,5 @@
 import Axios from "axios";
+import { LocalStorageAPI } from ".";
 
 const axios = Axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL,
@@ -8,9 +9,10 @@ const axios = Axios.create({
 });
 
 axios.interceptors.request.use((config) => {
-  const token = localStorage.getItem("jwt");
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const localAuth = LocalStorageAPI.getAuth()
+
+  if (localAuth && config.headers) {
+    config.headers.Authorization = `Bearer ${localAuth}`;
   }
 
   return config;
@@ -19,9 +21,9 @@ axios.interceptors.request.use((config) => {
 axios.interceptors.response.use((res) => {
   const auth = res.headers["authorization"];
   if (auth) {
-    const localAuth = localStorage.getItem("jwt");
+    const localAuth = LocalStorageAPI.getAuth()
     if (localAuth !== auth) {
-      localStorage.setItem("jwt", auth);
+      LocalStorageAPI.setAuth(auth)
     }
   }
   return res;
