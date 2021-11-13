@@ -13,6 +13,7 @@
     "@types/react": "^17.0.21",
     "@types/react-dom": "^17.0.9",
     "axios": "^0.24.0",
+    "deep-equal": "^2.0.5",
     "epubjs": "^0.3.90",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -66,6 +67,7 @@
     "@storybook/node-logger": "^6.3.8",
     "@storybook/preset-create-react-app": "^3.2.0",
     "@storybook/react": "^6.3.8",
+    "@types/deep-equal": "^1.0.1",
     "autoprefixer": "^9.8.7",
     "postcss": "^7.0.38",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.16"

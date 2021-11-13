@@ -1,73 +1,111 @@
-// import {
-//   getDocument,
-//   GlobalWorkerOptions,
-//   version,
-// } from "pdfjs-dist/legacy/build/pdf";
-// import ePub from "epubjs";
-
-import { FileTypes } from "../types/types";
-
-// export const extractPdfMetaData = async (file: File) => {
-//   if (file.type !== "application/pdf") {
-//     throw Error("Provided files is not a PDF file");
-//   }
-
-//   GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
-
-//   const pdfDocument = await getDocument(URL.createObjectURL(file)).promise;
-//   const metadata = await pdfDocument.getMetadata();
-//   console.log(metadata, null, 2);
-//   console.log(pdfDocument.fingerprints);
-// };
-
-// const readFileAsArrayBuffer = async (file: File) => {
-//   if (!window.FileReader) {
-//     throw new Error("Coud not load Epub file data");
-//   }
-
-//   let fileData: string | ArrayBuffer | null = await new Promise((resolve) => {
-//     var reader = new FileReader();
-//     reader.onload = (e) => resolve(reader.result);
-//     reader.readAsArrayBuffer(file);
-//   });
-
-//   return fileData;
-// };
-
-// export const extractEpubMetaData = async (file: File) => {
-//   if (file.type !== "application/epub+zip") {
-//     throw Error("Provided files is not a PDF file");
-//   }
-
-//   const epubData = await readFileAsArrayBuffer(file);
-
-//   if (!epubData) {
-//     throw Error("Could not load Epub aata");
-//   }
-
-//   const epubBook = ePub(epubData);
-//   console.log("ebook", epubBook);
-// };
+import { FileTypes, Annotation } from "../types/types";
+import equal from "deep-equal";
 
 export const getFileHash = async (file: File) => {
-    // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#converting_a_digest_to_a_hex_string
-    const digest = await crypto.subtle.digest(
-      "SHA-256",
-      await file.arrayBuffer()
-    );
-    const hashArray = Array.from(new Uint8Array(digest)); // convert buffer to byte array
-    const hashHex = hashArray
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join(""); // convert bytes to hex string
-    return hashHex;
-  };
+  // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#converting_a_digest_to_a_hex_string
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    await file.arrayBuffer()
+  );
+  const hashArray = Array.from(new Uint8Array(digest)); // convert buffer to byte array
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join(""); // convert bytes to hex string
+  return hashHex;
+};
 
-  export const getFileType = (file: File): FileTypes | undefined => {
-    if (file.type === FileTypes.pdf) {
-      return FileTypes.pdf
-    } else if (file.type === FileTypes.epub) {
-      return FileTypes.epub
-    } else {
-      return undefined;
+export const getFileType = (file: File): FileTypes | undefined => {
+  if (file.type === FileTypes.pdf) {
+    return FileTypes.pdf;
+  } else if (file.type === FileTypes.epub) {
+    return FileTypes.epub;
+  } else {
+    return undefined;
+  }
+};
+
+export const mergeAnnotations = ({
+  ancestor,
+  local,
+  upstream,
+}: {
+  ancestor: Array<Annotation>;
+  local: Array<Annotation>;
+  upstream: Array<Annotation>;
+}) => {
+  const ancestorObj = annoArrToAnnoObj(ancestor);
+  const localObj = annoArrToAnnoObj(local);
+  const upstreamObj = annoArrToAnnoObj(upstream);
+
+  const mergedObj = merge({
+    ancestor: ancestorObj,
+    local: localObj,
+    upstream: upstreamObj,
+  });
+  const mergedArr = annoObjToAnnoArr(mergedObj);
+  return mergedArr;
+};
+
+const annoArrToAnnoObj = (
+  annotations: Array<Annotation>
+): Record<string, any> => {
+  return annotations.reduce((acc, it) => {
+    return { ...acc, [it.id]: it };
+  }, {});
+};
+
+const annoObjToAnnoArr = (annotations: object): Array<Annotation> => {
+  return Object.entries(annotations).reduce((acc: Array<Annotation>, it) => {
+    return [...acc, it[1]];
+  }, []);
+};
+
+const merge = ({
+  ancestor,
+  local,
+  upstream,
+}: {
+  ancestor: Record<string, any>;
+  local: Record<string, any>;
+  upstream: Record<string, any>;
+}): Record<string, any> => {
+  let solvedConflicts = Object.entries(ancestor).reduce((acc, it) => {
+    const key = it[0];
+    if (upstream[key]) {
+      const localEqualAncestor = equal(ancestor[key], local[key]);
+      const upstreamEqualAncestor = equal(ancestor[key], upstream[key]);
+
+      if (localEqualAncestor && upstreamEqualAncestor) {
+        return { ...acc, [key]: ancestor[key] };
+      }
+
+      if (!upstreamEqualAncestor) {
+        return { ...acc, [key]: upstream[key] };
+      }
+
+      if (!localEqualAncestor && local[key]) {
+        return { ...acc, [key]: local[key] };
+      }
     }
-  };
+    return acc;
+  }, {});
+
+  const upstreamAdds = subtractObjects(upstream, ancestor);
+  const localAdds = subtractObjects(local, ancestor);
+
+  return { ...solvedConflicts, ...upstreamAdds, ...localAdds };
+};
+
+const subtractObjects = (
+  a: Record<string, any>,
+  b: Record<string, any>
+): Record<string, any> => {
+  const substraction = Object.keys(a).reduce((acc, it) => {
+    if (b[it]) {
+      return acc;
+    } else {
+      return { ...acc, [it]: a[it] };
+    }
+  }, {});
+  return substraction;
+};
