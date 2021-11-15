@@ -22,7 +22,6 @@ import EpubReader from "../EpubReader";
 import { EpubAnnotation } from "../EpubReader/types";
 import PdfReader from "../PdfReader";
 import { PdfAnnotation } from "../PdfReader/types";
-import "../../style/reactSplitPane.css";
 import {
   compareDocs,
   getFileType,
@@ -96,8 +95,8 @@ const splitPaneConfig = {
   ratioLeft: 75, // "ratioRight" = 100 - ratioLeft
   gutterStrokeWidth: 2, // pixels
   gutterPadding: 12, // pixels
-  minAnnoPanelWidth: 250, // pixels
-  minDocPanelWidth: 500, // pixels
+  minAnnoPanelWidth: 100, // pixels
+  minDocPanelWidth: 250, // pixels
 };
 
 export const DocumentReader = ({ fileWithHash, user }: Props) => {
@@ -344,7 +343,7 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
             />
           )}
         </div>
-        <div className="h-full w-full overflow-y-scroll">
+        <div className="h-full w-full overflow-y-scroll pt-2">
           {fileWithHash.fileHash === currentFileHash.current && (
             <AnnotationList
               annotations={annotations.sort(

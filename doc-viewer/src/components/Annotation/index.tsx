@@ -33,7 +33,7 @@ export default function Annotation({
           className="row-start-1 col-span-11 border-l-4 border-yellow-300 pl-3 flex flex-col justify-center"
           style={{ borderColor: color }}
         >
-          <blockquote className="cursor-pointer" onClick={onClick}>
+          <blockquote className="cursor-pointer select-none" onClick={onClick}>
             {highlight}
           </blockquote>
         </div>
