@@ -229,7 +229,6 @@ const syncDocWithBackend = async (doc: Doc): Promise<Doc> => {
     upstream: upstream || undefined,
     local: doc,
   });
-  debugger
 
   await API.setDocument(mergedDoc);
   Logger.info(

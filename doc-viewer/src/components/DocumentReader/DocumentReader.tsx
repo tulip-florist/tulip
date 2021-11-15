@@ -72,11 +72,9 @@ const annotationsReducer = (
       return updatedAnnotations;
     }
     case ActionTypes.SET_ANNOTATIONS: {
-      debugger;
       return action.payload.annotations;
     }
     case ActionTypes.CLEAR_ANNOTATIONS: {
-      debugger;
       return [];
     }
     default:
@@ -124,14 +122,12 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
   }, [fileWithHash]);
 
   useEffect(() => {
-    debugger;
     dispatch({ type: ActionTypes.CLEAR_ANNOTATIONS });
   }, [fileWithHash]);
 
   // Get data for the file from local storage
   useEffect(() => {
     if (currentFileHash.current !== fileHash) return;
-    debugger;
     const doc = LocalStorageAPI.getDocument(fileHash);
     if (doc) {
       dispatch({
@@ -181,7 +177,6 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
 
   // Sync data when annotations change (with debounce)
   useEffect(() => {
-    debugger;
     if (currentFileHash.current !== fileHash) return;
 
     if (isInitialMount) return;
@@ -189,7 +184,6 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
 
     // First, save app state to local storage
     LocalStorageAPI.setDocument(currentDoc);
-    debugger;
     // Check if user exists, else return
     if (!user) return;
 
@@ -197,9 +191,7 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
     const lastSyncedDoc = LocalStorageAPI.getSyncedVersionOfDocument(fileHash);
     const docsAreSame = compareDocs(currentDoc, lastSyncedDoc || undefined);
 
-    debugger;
     if (docsAreSame) return;
-    debugger;
 
     // Else, merge the 3 states, update lastSynced, return the merged object and update the app state
     syncServerDebounce(annotations, fileHash);
