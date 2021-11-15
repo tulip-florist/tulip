@@ -30,7 +30,7 @@ export default function EpubReader({
   const [hTooltipPos, setHTooltipPos] = useState<{
     x: number;
     y: number;
-  }>();
+  }>({ x: 0, y: 0 });
   const currSelection = useRef<{
     cfiRange: string;
     highlight: string;
@@ -38,11 +38,14 @@ export default function EpubReader({
   }>();
   const hTooltipRef = useRef<HTMLDivElement>(null);
 
-  const calulateHTooltipPosition = (mouseX: number, mouseY: number) => {
+  const calulateHTooltipPosition = (
+    mouseX: number,
+    mouseY: number
+  ): { x: number; y: number } => {
     const tooltip = hTooltipRef.current;
     const viewer = viewerRef.current;
 
-    if (!viewer || !tooltip) return;
+    if (!viewer || !tooltip) return { x: 0, y: 0 };
 
     const maxX = viewer.scrollWidth - tooltip.offsetWidth;
     const maxY = viewer.scrollHeight - tooltip.offsetHeight;
@@ -248,9 +251,9 @@ export default function EpubReader({
   }, [annotations, removeHighlightInDoc, createHighlightInDoc]);
 
   return (
-    <>
-      <div className="h-full flex flex-col">
-        <div id="viewer" className="w-full h-full" ref={viewerRef}></div>
+    <div className="h-full w-full flex flex-col relative">
+      <div id="viewer" className="h-full w-full my-1" ref={viewerRef}></div>
+      <div className="flex-initial">
         <div className="flex flex-grow justify-around mb-2 gap-x-2">
           <button
             type="button"
@@ -283,6 +286,6 @@ export default function EpubReader({
           onColorClick={handleHighlightColorClick}
         />
       </div>
-    </>
+    </div>
   );
 }

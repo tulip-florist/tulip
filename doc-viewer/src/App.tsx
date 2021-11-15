@@ -17,7 +17,7 @@ export const UserContext = createContext<IUserContext>({
 const App = () => {
   const [user, setUser] = useState<User | null>(null);
   return (
-    <div>
+    <div className="h-screen w-screen">
       <UserContext.Provider
         value={{ user, setUser: (user: User) => setUser(user) }}
       >

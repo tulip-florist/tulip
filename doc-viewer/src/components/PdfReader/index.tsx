@@ -83,7 +83,7 @@ const PdfViewer = ({
   );
 
   return (
-    <div className="App" style={{ display: "flex", height: "100vh" }}>
+    <div className="h-full w-full relative">
       <PdfLoader url={url} beforeLoad={<Spinner />}>
         {(pdfDocument) => {
           return (

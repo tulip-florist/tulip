@@ -6,7 +6,6 @@ import React, {
   useEffect,
   useRef,
 } from "react";
-import SplitPane from "react-split-pane";
 import {
   Action,
   FileTypes,
@@ -26,6 +25,7 @@ import "../../style/reactSplitPane.css";
 import * as API from "../../util/api";
 import { getFileType } from "../../util";
 import { v4 as uuidv4 } from "uuid";
+import Split from "react-split";
 
 interface Props {
   fileWithHash: FileWithHash;
@@ -85,6 +85,14 @@ const defaultHighlightColors: Array<string> = [
   "#EE7A99",
   "#A78FEB",
 ];
+
+const splitPaneConfig = {
+  ratioLeft: 75, // "ratioRight" = 100 - ratioLeft
+  gutterStrokeWidth: 2, // pixels
+  gutterPadding: 12, // pixels
+  minAnnoPanelWidth: 250, // pixels
+  minDocPanelWidth: 500, // pixels
+};
 
 export const DocumentReader = ({ fileWithHash, user }: Props) => {
   const [annotations, dispatch] = useReducer(annotationsReducer, []);
@@ -267,10 +275,37 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
     [setScrollToHighlightInDocument]
   );
 
+  const handleDragEnd = () => {
+    window.dispatchEvent(new Event("resize"));
+  };
+
   return (
-    <div className="App">
-      <SplitPane split="vertical" maxSize={-300} defaultSize={1100}>
-        <div className="pr-2 h-full w-full">
+    <>
+      <Split
+        sizes={[splitPaneConfig.ratioLeft, 100 - splitPaneConfig.ratioLeft]}
+        minSize={[
+          splitPaneConfig.minDocPanelWidth,
+          splitPaneConfig.minAnnoPanelWidth,
+        ]}
+        expandToMin={true}
+        gutterStyle={(dimension, gutterSize, index) => {
+          const gutterWidth =
+            splitPaneConfig.gutterPadding * 2 +
+            splitPaneConfig.gutterStrokeWidth;
+          return {
+            height: "100%",
+            width: `${gutterWidth}px`,
+            borderLeft: `${splitPaneConfig.gutterPadding}px solid white`,
+            borderRight: `${splitPaneConfig.gutterPadding}px solid white`,
+            backgroundColor: "#d2d2d2",
+          };
+        }}
+        dragInterval={1}
+        direction="horizontal"
+        className="h-full w-full flex flex-row pr-1"
+        onDragEnd={handleDragEnd}
+      >
+        <div className="w-full h-full">
           {getFileType(file) === FileTypes.epub ? (
             <EpubReader
               file={file}
@@ -291,46 +326,42 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
             />
           )}
         </div>
-        <div className="h-full overflow-y-auto">
-          <div className="flex flex-col px-2 py-1">
-            {fileWithHash.fileHash === currentFileHash.current && (
-              <AnnotationList
-                annotations={annotations.sort(
-                  getFileType(file) === FileTypes.epub
-                    ? sortEpubAnnotationsByPositition
-                    : sortPdfAnnotationsByPosition
-                )}
-                onScrollToAnnotationReady={setScrollToAnnotationInListCallback}
-                onFocusAnnotationInputReady={
-                  setFocusAnnotationInputInListCallback
-                }
-              >
-                {({ annotation, containerRef, inputRef }) => {
-                  return (
-                    <div className="py-1 ..." key={annotation.id}>
-                      <AnnotationMemo
-                        highlight={annotation.highlight}
-                        note={annotation.note}
-                        color={annotation.color}
-                        containerRef={containerRef}
-                        inputRef={inputRef}
-                        onNoteChange={(note: string) =>
-                          handleAnnotationNoteUpateMemo(annotation.id, note)
-                        }
-                        onDelete={() =>
-                          handleDeleteAnnotationMemo(annotation.id)
-                        }
-                        onClick={() => handleAnnotationClick(annotation)} // TODO
-                      />
-                    </div>
-                  );
-                }}
-              </AnnotationList>
-            )}
-          </div>
+        <div className="h-full w-full overflow-y-scroll">
+          {fileWithHash.fileHash === currentFileHash.current && (
+            <AnnotationList
+              annotations={annotations.sort(
+                getFileType(file) === FileTypes.epub
+                  ? sortEpubAnnotationsByPositition
+                  : sortPdfAnnotationsByPosition
+              )}
+              onScrollToAnnotationReady={setScrollToAnnotationInListCallback}
+              onFocusAnnotationInputReady={
+                setFocusAnnotationInputInListCallback
+              }
+            >
+              {({ annotation, containerRef, inputRef }) => {
+                return (
+                  <div className="py-1 ..." key={annotation.id}>
+                    <AnnotationMemo
+                      highlight={annotation.highlight}
+                      note={annotation.note}
+                      color={annotation.color}
+                      containerRef={containerRef}
+                      inputRef={inputRef}
+                      onNoteChange={(note: string) =>
+                        handleAnnotationNoteUpateMemo(annotation.id, note)
+                      }
+                      onDelete={() => handleDeleteAnnotationMemo(annotation.id)}
+                      onClick={() => handleAnnotationClick(annotation)} // TODO
+                    />
+                  </div>
+                );
+              }}
+            </AnnotationList>
+          )}
         </div>
-      </SplitPane>
-    </div>
+      </Split>
+    </>
   );
 };
 

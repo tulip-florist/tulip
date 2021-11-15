@@ -57,36 +57,41 @@ export const DocumentReaderView = () => {
   };
 
   return (
-    <div>
-      <h1>Tulip 🌷</h1>
-      <FileInput handleInputChange={handleFileInputChange} />
-      {user ? (
-        <p>Logged in: {user.id}</p>
-      ) : (
-        <div>
-          <input
-            placeholder="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            placeholder="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button onClick={() => handleEmailRegister({ email, password })}>
-            Register
-          </button>
-          <button onClick={() => handleEmailLogin({ email, password })}>
-            Login
-          </button>
-        </div>
-      )}
-      {fileWithHash && (
-        <DocumentReader fileWithHash={fileWithHash} user={user} />
-      )}
+    <div className="h-full w-full flex flex-col">
+      <div className="w-full flex-initial">
+        <h1>Tulip 🌷</h1>
+        <FileInput handleInputChange={handleFileInputChange} />
+        {user ? (
+          <p>Logged in: {user.id}</p>
+        ) : (
+          <div>
+            <input
+              placeholder="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <input
+              placeholder="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button onClick={() => handleEmailRegister({ email, password })}>
+              Register
+            </button>
+            <button onClick={() => handleEmailLogin({ email, password })}>
+              Login
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="w-full flex-grow overflow-hidden">
+        {fileWithHash && (
+          <DocumentReader fileWithHash={fileWithHash} user={user} />
+        )}
+      </div>
     </div>
   );
 };
