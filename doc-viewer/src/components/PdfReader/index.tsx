@@ -119,6 +119,7 @@ const PdfViewer = ({
                     highlightColors={highlightColors}
                     onColorClick={(color: string) => {
                       if (!content.text) return;
+                      hideTipAndSelection();
                       handleCreateAnnotation({
                         position,
                         color,
