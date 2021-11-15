@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import DocumentReader from "../DocumentReader/DocumentReader";
 import FileInput from "../FileInput";
 import { getFileHash, LocalStorageAPI, SyncUtil } from "../../util";
@@ -10,11 +10,20 @@ import { NavBar } from "../NavBar";
 import { UserProfile } from "../UserProfile";
 import { EmailLoginRegister } from "../EmailLoginRegister";
 import { useUserLogout } from "../../hooks";
+import { useDropzone } from "react-dropzone";
 
 export const DocumentReaderView = () => {
   const [fileWithHash, setFileWithHash] = useState<FileWithHash | null>(null);
   const { user, setUser } = useContext(UserContext);
   const handleLogout = useUserLogout();
+
+  const onDrop = useCallback(async (files) => {
+    const file = files?.[0] || null;
+    if (file) {
+      setFileWithHash({ file, fileHash: await getFileHash(file) });
+    }
+  }, []);
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   // If JWT in local storage, get and set user
   useEffect(() => {
@@ -80,7 +89,10 @@ export const DocumentReaderView = () => {
             <div>
               <span>Tulip 🌷</span>
               <span className="text-gray-400 ml-1 mr-2">|</span>
-              <FileInput handleInputChange={handleFileInputChange} />
+              <FileInput
+                value={fileWithHash?.file}
+                handleInputChange={handleFileInputChange}
+              />
             </div>
             <div>
               {user ? (
@@ -96,9 +108,31 @@ export const DocumentReaderView = () => {
         </NavBar>
       </div>
 
-      <div className="w-full flex-grow overflow-hidden">
-        {fileWithHash && (
+      <div
+        className="w-full flex-grow overflow-hidden relative"
+        {...getRootProps()}
+      >
+        {isDragActive && (
+          <div className="bg-gray-800 bg-opacity-50 w-full h-full flex justify-center items-center cursor-pointer z-10 absolute">
+            <div className="bg-white p-4 rounded-sm">
+              <p className="text-xl text-gray-600">
+                Drag 'n' drop a <span className="font-bold">PDF</span> or{" "}
+                <span className="font-bold">EPUB</span> document here
+              </p>
+            </div>
+          </div>
+        )}
+        {fileWithHash ? (
           <DocumentReader fileWithHash={fileWithHash} user={user} />
+        ) : (
+          <div className="w-full h-full flex justify-center items-center cursor-pointer">
+            <input {...getInputProps()} />
+            <p className="text-xl text-gray-600">
+              Drag 'n' drop a <span className="font-bold">PDF</span> or{" "}
+              <span className="font-bold">EPUB</span> document here, or click to
+              select
+            </p>
+          </div>
         )}
       </div>
     </div>
