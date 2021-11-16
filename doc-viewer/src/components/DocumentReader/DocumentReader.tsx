@@ -4,7 +4,6 @@ import React, {
   useReducer,
   useCallback,
   useEffect,
-  useRef,
   useMemo,
 } from "react";
 import {
@@ -58,7 +57,6 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
   const [annotations, dispatch] = useReducer(annotationsReducer, []);
   const [highlightColors] = useState(defaultHighlightColors);
   const { file, fileHash } = fileWithHash;
-  const currentFileHash = useRef(fileWithHash.fileHash);
   const isInitialMount = useInitialMount();
   const SYNC_DEBOUNCE_TIME = 1000; //ms
 
@@ -70,18 +68,8 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
     ((id: AnnotationType["id"]) => void) | undefined
   >();
 
-  // Update current file ref
-  useEffect(() => {
-    currentFileHash.current = fileWithHash.fileHash;
-  }, [fileWithHash]);
-
-  useEffect(() => {
-    dispatch({ type: ActionTypes.CLEAR_ANNOTATIONS });
-  }, [fileWithHash]);
-
   // Get data for the file from local storage
   useEffect(() => {
-    if (currentFileHash.current !== fileHash) return;
     const doc = LocalStorageAPI.getDocument(fileHash);
     if (doc) {
       dispatch({
@@ -131,8 +119,6 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
 
   // Sync data when annotations change (with debounce)
   useEffect(() => {
-    if (currentFileHash.current !== fileHash) return;
-
     if (isInitialMount) return;
     const currentDoc: Doc = { documentHash: fileHash, annotations };
 
@@ -299,38 +285,34 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
           )}
         </div>
         <div className="h-full w-full overflow-y-scroll pt-2">
-          {fileWithHash.fileHash === currentFileHash.current && (
-            <AnnotationList
-              annotations={annotations.sort(
-                getFileType(file) === FileTypes.epub
-                  ? sortEpubAnnotationsByPositition
-                  : sortPdfAnnotationsByPosition
-              )}
-              onScrollToAnnotationReady={setScrollToAnnotationInListCallback}
-              onFocusAnnotationInputReady={
-                setFocusAnnotationInputInListCallback
-              }
-            >
-              {({ annotation, containerRef, inputRef }) => {
-                return (
-                  <div className="py-1 ..." key={annotation.id}>
-                    <AnnotationMemo
-                      highlight={annotation.highlight}
-                      note={annotation.note}
-                      color={annotation.color}
-                      containerRef={containerRef}
-                      inputRef={inputRef}
-                      onNoteChange={(note: string) =>
-                        handleAnnotationNoteUpateMemo(annotation.id, note)
-                      }
-                      onDelete={() => handleDeleteAnnotationMemo(annotation.id)}
-                      onClick={() => handleAnnotationClick(annotation)} // TODO
-                    />
-                  </div>
-                );
-              }}
-            </AnnotationList>
-          )}
+          <AnnotationList
+            annotations={annotations.sort(
+              getFileType(file) === FileTypes.epub
+                ? sortEpubAnnotationsByPositition
+                : sortPdfAnnotationsByPosition
+            )}
+            onScrollToAnnotationReady={setScrollToAnnotationInListCallback}
+            onFocusAnnotationInputReady={setFocusAnnotationInputInListCallback}
+          >
+            {({ annotation, containerRef, inputRef }) => {
+              return (
+                <div className="py-1 ..." key={annotation.id}>
+                  <AnnotationMemo
+                    highlight={annotation.highlight}
+                    note={annotation.note}
+                    color={annotation.color}
+                    containerRef={containerRef}
+                    inputRef={inputRef}
+                    onNoteChange={(note: string) =>
+                      handleAnnotationNoteUpateMemo(annotation.id, note)
+                    }
+                    onDelete={() => handleDeleteAnnotationMemo(annotation.id)}
+                    onClick={() => handleAnnotationClick(annotation)} // TODO
+                  />
+                </div>
+              );
+            }}
+          </AnnotationList>
         </div>
       </Split>
     </>

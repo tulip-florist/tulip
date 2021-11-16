@@ -123,7 +123,11 @@ export const DocumentReaderView = () => {
           </div>
         )}
         {fileWithHash ? (
-          <DocumentReader fileWithHash={fileWithHash} user={user} />
+          <DocumentReader
+            fileWithHash={fileWithHash}
+            user={user}
+            key={fileWithHash.fileHash}
+          />
         ) : (
           <div className="w-full h-full flex justify-center items-center cursor-pointer">
             <input {...getInputProps()} />
