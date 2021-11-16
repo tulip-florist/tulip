@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import DocumentReader from "../DocumentReader/DocumentReader";
 import FileInput from "../FileInput";
-import { getFileHash, LocalStorageAPI, SyncUtil } from "../../util";
+import { getFileHash } from "../../util";
 import * as API from "../../util/api";
 import { UserContext } from "../../App";
 import { FileWithHash } from "../../types/types";
@@ -11,6 +11,7 @@ import { UserProfile } from "../UserProfile";
 import { EmailLoginRegister } from "../EmailLoginRegister";
 import { useUserLogout } from "../../hooks";
 import { useDropzone } from "react-dropzone";
+import { LocalStorageAPI } from "../../util/LocalStorageAPI";
 
 export const DocumentReaderView = () => {
   const [fileWithHash, setFileWithHash] = useState<FileWithHash | null>(null);

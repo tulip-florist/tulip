@@ -1,5 +1,5 @@
 import Axios from "axios";
-import { LocalStorageAPI } from ".";
+import { LocalStorageAPI } from "./LocalStorageAPI";
 
 const axios = Axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL,

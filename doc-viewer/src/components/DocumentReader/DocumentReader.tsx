@@ -19,17 +19,14 @@ import EpubReader, { sortEpubAnnotationsByPositition } from "../EpubReader";
 import { EpubAnnotation } from "../EpubReader/types";
 import PdfReader, { sortPdfAnnotationsByPosition } from "../PdfReader";
 import { PdfAnnotation } from "../PdfReader/types";
-import {
-  compareDocs,
-  getFileType,
-  LocalStorageAPI,
-  SyncUtil,
-} from "../../util";
+import { compareDocs, getFileType } from "../../util";
 import Split from "react-split";
 import { debounce } from "lodash";
 import { useInitialMount } from "../../hooks/useIsInitialMount";
 import { annotationsReducer } from "../../util/reducers";
 import { defaultSplitPaneProps } from "../../util/split";
+import { LocalStorageAPI } from "../../util/LocalStorageAPI";
+import { SyncUtil } from "../../util/SyncUtil";
 interface Props {
   fileWithHash: FileWithHash;
   user: User | null;
