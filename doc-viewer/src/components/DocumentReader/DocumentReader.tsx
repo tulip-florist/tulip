@@ -59,13 +59,14 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
 
   // Get data for the file from local storage
   useEffect(() => {
-    const doc = LocalStorageAPI.getDocument(fileHash);
-    if (doc) {
-      dispatch({
-        type: ActionTypes.SET_ANNOTATIONS,
-        payload: { annotations: doc.annotations },
-      });
-    }
+    LocalStorageAPI.getDocument(fileHash).then((doc) => {
+      if (doc) {
+        dispatch({
+          type: ActionTypes.SET_ANNOTATIONS,
+          payload: { annotations: doc.annotations },
+        });
+      }
+    });
   }, [fileHash]);
 
   // // On user login, sync data from server
@@ -117,13 +118,17 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
     if (!user) return;
 
     // If lastSynced is the same as the current app state, do nothing
-    const lastSyncedDoc = LocalStorageAPI.getSyncedVersionOfDocument(fileHash);
-    const docsAreSame = compareDocs(currentDoc, lastSyncedDoc || undefined);
+    (async () => {
+      const lastSyncedDoc = await LocalStorageAPI.getSyncedVersionOfDocument(
+        fileHash
+      );
+      const docsAreSame = compareDocs(currentDoc, lastSyncedDoc || undefined);
 
-    if (docsAreSame) return;
+      if (docsAreSame) return;
 
-    // Else, merge the 3 states, update lastSynced, return the merged object and update the app state
-    syncServerDebounce(annotations, fileHash);
+      // Else, merge the 3 states, update lastSynced, return the merged object and update the app state
+      syncServerDebounce(annotations, fileHash);
+    })();
   }, [annotations, fileHash, isInitialMount, syncServerDebounce, user]);
 
   const [

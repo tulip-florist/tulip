@@ -1,55 +1,62 @@
 import { Doc } from "../types/types";
 import { Logger } from "./logging";
+import localforage from "localforage";
+
+localforage.config({
+  driver: localforage.WEBSQL, // Force WebSQL; same as using setDriver()
+  name: "tulip",
+  version: 1.0,
+  size: 4980736, // Size of database, in bytes. WebSQL-only for now.
+  storeName: "tulip_docs", // Should be alphanumeric, with underscores.
+  description: "Applictation data for Tulip data",
+});
 
 const docPrefix = "doc:";
 const lastSyncedPreix = "lastSyncedDoc:";
 
-const getDocument = (hash: string): Doc | null => {
-  const data = localStorage.getItem(`${docPrefix}${hash}`);
+const getDocument = async (hash: string): Promise<Doc | null> => {
+  const data = (await localforage.getItem(`${docPrefix}${hash}`)) as string;
   return data ? JSON.parse(data) : null;
 };
 
-const setDocument = (doc: Doc): void => {
-  localStorage.setItem(`${docPrefix}${doc.documentHash}`, JSON.stringify(doc));
+const setDocument = async (doc: Doc) => {
+  localforage.setItem(`${docPrefix}${doc.documentHash}`, JSON.stringify(doc));
   Logger.info("LocalStorageAPI, (setDocument)");
 };
 
-const getSyncedVersionOfDocument = (hash: string): Doc | null => {
-  const data = localStorage.getItem(`${lastSyncedPreix}${hash}`);
+const getSyncedVersionOfDocument = async (
+  hash: string
+): Promise<Doc | null> => {
+  const data = (await localforage.getItem(
+    `${lastSyncedPreix}${hash}`
+  )) as string;
   return data ? JSON.parse(data) : null;
 };
 
-const setSyncedVersionOfDocument = (doc: Doc) => {
-  localStorage.setItem(
+const setSyncedVersionOfDocument = async (doc: Doc) => {
+  localforage.setItem(
     `${lastSyncedPreix}${doc.documentHash}`,
     JSON.stringify(doc)
   );
   Logger.info("LocalStorageAPI, (setSyncedVersionOfDocument)");
 };
 
-const getAllDocuments = (): Array<Doc> => {
-  const allkeys = Array(localStorage.length)
-    .fill(undefined)
-    .map((it, i) => localStorage.key(i))
-    .filter((it) => it !== null) as Array<string>;
-  const docKeys = allkeys
-    .filter((it) => it.slice(0, docPrefix.length) === docPrefix)
-    .map((it) => it.slice(docPrefix.length));
-  const docs: Array<Doc> = docKeys.reduce((acc: Array<Doc>, it: string) => {
-    const doc = getDocument(it);
-    if (doc) {
-      return [...acc, doc];
-    } else {
-      return acc;
+const getAllDocuments = async (): Promise<Array<Doc>> => {
+  let docs: Array<Doc> = [];
+  localforage.iterate<string, void>((value, key, i) => {
+    debugger;
+    if (key.slice(0, docPrefix.length) === docPrefix) {
+      debugger;
+      docs.push(JSON.parse(value) as Doc);
     }
-  }, []);
+  });
 
   Logger.info(`(getAllDocuments), :num of docs: ${docs.length}`);
   return docs;
 };
 
-const setAuth = (token: string) => {
-  localStorage.setItem("auth", token);
+const setAuth = async (token: string) => {
+  localforage.setItem("auth", token);
   Logger.info("LocalStorageAPI, (setAuth)");
 };
 

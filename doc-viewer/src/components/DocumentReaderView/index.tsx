@@ -12,11 +12,14 @@ import { EmailLoginRegister } from "../EmailLoginRegister";
 import { useUserLogout } from "../../hooks";
 import { useDropzone } from "react-dropzone";
 import { LocalStorageAPI } from "../../util/LocalStorageAPI";
+import { useSyncAllLocalStorageDocsWithServer } from "../../hooks/useSyncAllLocalStorageDocsWithServer";
 
 export const DocumentReaderView = () => {
   const [fileWithHash, setFileWithHash] = useState<FileWithHash | null>(null);
   const { user, setUser } = useContext(UserContext);
   const handleLogout = useUserLogout();
+
+  useSyncAllLocalStorageDocsWithServer();
 
   const onDrop = useCallback(async (files) => {
     const file = files?.[0] || null;
@@ -29,7 +32,7 @@ export const DocumentReaderView = () => {
   // If JWT in local storage, get and set user
   useEffect(() => {
     (async () => {
-      const jwt = LocalStorageAPI.getAuth();
+      const jwt = await LocalStorageAPI.getAuth();
 
       if (jwt && !user) {
         Logger.info(
@@ -40,17 +43,6 @@ export const DocumentReaderView = () => {
       }
     })();
   }, [setUser, user]);
-
-  // Sync all local documents with the server (merge)
-  // Use case: User made local changes to different files, and all should be synced when use logs in / goes online
-  // useEffect(() => {
-  //   if (!user) return;
-
-  //   const localDocs = LocalStorageAPI.getAllDocuments();
-  //   localDocs.forEach((it) => {
-  //     SyncUtil.syncDocWithBackend(it);
-  //   });
-  // }, [user]);
 
   const handleFileInputChange = async (
     event: React.ChangeEvent<HTMLInputElement>
