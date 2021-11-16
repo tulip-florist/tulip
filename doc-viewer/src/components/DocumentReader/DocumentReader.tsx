@@ -30,6 +30,7 @@ import Split from "react-split";
 import { debounce } from "lodash";
 import { useInitialMount } from "../../hooks/useIsInitialMount";
 import { annotationsReducer } from "../../util/reducers";
+import { defaultSplitPaneProps } from "../../util/split";
 interface Props {
   fileWithHash: FileWithHash;
   user: User | null;
@@ -44,14 +45,6 @@ const defaultHighlightColors: Array<string> = [
   "#EE7A99",
   "#A78FEB",
 ];
-
-const splitPaneConfig = {
-  ratioLeft: 75, // "ratioRight" = 100 - ratioLeft
-  gutterStrokeWidth: 2, // pixels
-  gutterPadding: 12, // pixels
-  minAnnoPanelWidth: 100, // pixels
-  minDocPanelWidth: 250, // pixels
-};
 
 export const DocumentReader = ({ fileWithHash, user }: Props) => {
   const [annotations, dispatch] = useReducer(annotationsReducer, []);
@@ -233,35 +226,12 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
     [setScrollToHighlightInDocument]
   );
 
-  const handleDragEnd = () => {
-    window.dispatchEvent(new Event("resize"));
-  };
-
   return (
     <>
       <Split
-        sizes={[splitPaneConfig.ratioLeft, 100 - splitPaneConfig.ratioLeft]}
-        minSize={[
-          splitPaneConfig.minDocPanelWidth,
-          splitPaneConfig.minAnnoPanelWidth,
-        ]}
-        expandToMin={true}
-        gutterStyle={(dimension, gutterSize, index) => {
-          const gutterWidth =
-            splitPaneConfig.gutterPadding * 2 +
-            splitPaneConfig.gutterStrokeWidth;
-          return {
-            height: "100%",
-            width: `${gutterWidth}px`,
-            borderLeft: `${splitPaneConfig.gutterPadding}px solid white`,
-            borderRight: `${splitPaneConfig.gutterPadding}px solid white`,
-            backgroundColor: "#d2d2d2",
-          };
-        }}
-        dragInterval={1}
-        direction="horizontal"
-        className="h-full w-full flex flex-row pr-1"
-        onDragEnd={handleDragEnd}
+        {...defaultSplitPaneProps}
+        className={"h-full w-full flex flex-row pr-1"}
+        onDragEnd={() => window.dispatchEvent(new Event("resize"))}
       >
         <div className="w-full h-full">
           {getFileType(file) === FileTypes.epub ? (
