@@ -1,5 +1,5 @@
 import { useState, ReactElement, useEffect, useRef, useCallback } from "react";
-import ePub, { Book, Contents, Rendition } from "epubjs";
+import ePub, { Book, Contents, EpubCFI, Rendition } from "epubjs";
 import { UilAngleLeftB, UilAngleRightB } from "@iconscout/react-unicons";
 import { HighlightTooltip } from "../HighlightTooltip";
 import { EpubAnnotation, EpubAnnotationNoId } from "./types";
@@ -289,3 +289,10 @@ export default function EpubReader({
     </div>
   );
 }
+
+export const sortEpubAnnotationsByPositition = (
+  ann1: EpubAnnotation,
+  ann2: EpubAnnotation
+) => {
+  return new EpubCFI().compare(ann1.position.cfiRange, ann2.position.cfiRange);
+};

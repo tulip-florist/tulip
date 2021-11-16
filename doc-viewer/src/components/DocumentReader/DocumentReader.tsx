@@ -1,4 +1,3 @@
-import { EpubCFI } from "epubjs";
 import React, {
   useState,
   useReducer,
@@ -16,9 +15,9 @@ import {
 } from "../../types/types";
 import Annotation from "../Annotation";
 import { AnnotationList } from "../AnnotationList";
-import EpubReader from "../EpubReader";
+import EpubReader, { sortEpubAnnotationsByPositition } from "../EpubReader";
 import { EpubAnnotation } from "../EpubReader/types";
-import PdfReader from "../PdfReader";
+import PdfReader, { sortPdfAnnotationsByPosition } from "../PdfReader";
 import { PdfAnnotation } from "../PdfReader/types";
 import {
   compareDocs,
@@ -157,30 +156,6 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
 
   const handleAnnotationClick = (annotation: AnnotationType) => {
     scrollToHighlightInDocument(annotation.position);
-  };
-
-  // SORTING
-  const sortEpubAnnotationsByPositition = (
-    ann1: EpubAnnotation,
-    ann2: EpubAnnotation
-  ) => {
-    return new EpubCFI().compare(
-      ann1.position.cfiRange,
-      ann2.position.cfiRange
-    );
-  };
-
-  const sortPdfAnnotationsByPosition = (
-    { position: pos1 }: PdfAnnotation,
-    { position: pos2 }: PdfAnnotation
-  ) => {
-    if (pos1.pageNumber !== pos2.pageNumber) {
-      return pos1.pageNumber - pos2.pageNumber;
-    } else if (pos1.boundingRect.y2 !== pos2.boundingRect.y2) {
-      return pos1.boundingRect.y2 - pos2.boundingRect.y2;
-    } else {
-      return pos1.boundingRect.x2 - pos2.boundingRect.x2;
-    }
   };
 
   // HANDLER -> REDUCER DISPATCH

@@ -178,3 +178,16 @@ const PdfViewer = ({
 };
 
 export default PdfViewer;
+
+export const sortPdfAnnotationsByPosition = (
+  { position: pos1 }: PdfAnnotation,
+  { position: pos2 }: PdfAnnotation
+) => {
+  if (pos1.pageNumber !== pos2.pageNumber) {
+    return pos1.pageNumber - pos2.pageNumber;
+  } else if (pos1.boundingRect.y2 !== pos2.boundingRect.y2) {
+    return pos1.boundingRect.y2 - pos2.boundingRect.y2;
+  } else {
+    return pos1.boundingRect.x2 - pos2.boundingRect.x2;
+  }
+};
