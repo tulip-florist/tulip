@@ -8,7 +8,6 @@ import React, {
   useMemo,
 } from "react";
 import {
-  Action,
   FileTypes,
   Annotation as AnnotationType,
   ActionTypes,
@@ -28,58 +27,14 @@ import {
   LocalStorageAPI,
   SyncUtil,
 } from "../../util";
-import { v4 as uuidv4 } from "uuid";
 import Split from "react-split";
 import { debounce } from "lodash";
 import { useInitialMount } from "../../hooks/useIsInitialMount";
+import { annotationsReducer } from "../../util/reducers";
 interface Props {
   fileWithHash: FileWithHash;
   user: User | null;
 }
-
-const annotationsReducer = (
-  annotations: Array<AnnotationType>,
-  action: Action
-) => {
-  switch (action.type) {
-    case ActionTypes.CREATE_ANNOTATION: {
-      const newAnnotation = { ...action.payload.annotation, id: uuidv4() };
-      const updatedAnnotations: Array<AnnotationType> = [
-        ...annotations,
-        newAnnotation,
-      ];
-      return updatedAnnotations;
-    }
-    case ActionTypes.DELETE_ANNOTATION: {
-      const filteredAnnotations = annotations.filter(
-        (annotation) => annotation.id !== action.payload.annotationId
-      );
-      return filteredAnnotations;
-    }
-    case ActionTypes.UPDATE_ANNOTATION: {
-      const updatedAnnotations = annotations.map((annotation) => {
-        if (annotation.id === action.payload.annotationId) {
-          return {
-            ...annotation,
-            ...action.payload.propsToUpdate,
-          };
-        } else {
-          return annotation;
-        }
-      });
-
-      return updatedAnnotations;
-    }
-    case ActionTypes.SET_ANNOTATIONS: {
-      return action.payload.annotations;
-    }
-    case ActionTypes.CLEAR_ANNOTATIONS: {
-      return [];
-    }
-    default:
-      throw new Error("Not a valid action for annotationReducer");
-  }
-};
 
 const AnnotationMemo = React.memo(Annotation);
 
