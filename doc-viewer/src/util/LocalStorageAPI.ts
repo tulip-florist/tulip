@@ -1,62 +1,70 @@
 import { Doc } from "../types/types";
 import { Logger } from "./logging";
 import localforage from "localforage";
+import "localforage-observable";
+import { Observable } from "rxjs";
+import { compareDocs } from ".";
+
+export interface LocalStorageDoc {
+  currentDoc?: Doc;
+  lastSyncedDoc?: Doc;
+}
 
 localforage.config({
-  driver: localforage.WEBSQL, // Force WebSQL; same as using setDriver()
+  driver: localforage.INDEXEDDB, // Force WebSQL; same as using setDriver()
   name: "tulip",
   version: 1.0,
-  size: 4980736, // Size of database, in bytes. WebSQL-only for now.
   storeName: "tulip_docs", // Should be alphanumeric, with underscores.
-  description: "Applictation data for Tulip data",
+  description: "Applictation data for Tulip user data",
 });
 
-const docPrefix = "doc:";
-const lastSyncedPreix = "lastSyncedDoc:";
+localforage.newObservable.factory = function (subscribeFn) {
+  return new Observable(subscribeFn);
+};
 
 const getDocument = async (hash: string): Promise<Doc | null> => {
-  const data = (await localforage.getItem(`${docPrefix}${hash}`)) as string;
-  return data ? JSON.parse(data) : null;
+  const storedDoc = await localforage.getItem<LocalStorageDoc>(hash);
+  return storedDoc?.currentDoc || null;
 };
 
 const setDocument = async (doc: Doc) => {
-  localforage.setItem(`${docPrefix}${doc.documentHash}`, JSON.stringify(doc));
+  const savedDoc = await localforage.getItem<LocalStorageDoc>(doc.documentHash);
+  const updatedDoc: LocalStorageDoc = { ...savedDoc, currentDoc: doc };
+  await localforage.setItem(doc.documentHash, updatedDoc);
   Logger.info("LocalStorageAPI, (setDocument)");
 };
 
 const getSyncedVersionOfDocument = async (
   hash: string
 ): Promise<Doc | null> => {
-  const data = (await localforage.getItem(
-    `${lastSyncedPreix}${hash}`
-  )) as string;
-  return data ? JSON.parse(data) : null;
+  const storedDoc = await localforage.getItem<LocalStorageDoc>(hash);
+  return storedDoc?.lastSyncedDoc || null;
 };
 
 const setSyncedVersionOfDocument = async (doc: Doc) => {
-  localforage.setItem(
-    `${lastSyncedPreix}${doc.documentHash}`,
-    JSON.stringify(doc)
+  const storedDoc = await localforage.getItem<LocalStorageDoc>(
+    doc.documentHash
   );
+  const updatedDoc: LocalStorageDoc = { ...storedDoc, lastSyncedDoc: doc };
+  await localforage.setItem(doc.documentHash, updatedDoc);
   Logger.info("LocalStorageAPI, (setSyncedVersionOfDocument)");
 };
 
 const getAllDocuments = async (): Promise<Array<Doc>> => {
-  let docs: Array<Doc> = [];
-  localforage.iterate<string, void>((value, key, i) => {
-    debugger;
-    if (key.slice(0, docPrefix.length) === docPrefix) {
-      debugger;
-      docs.push(JSON.parse(value) as Doc);
-    }
+  let allSavedDocs: Array<LocalStorageDoc> = [];
+  localforage.iterate<LocalStorageDoc, void>((value, key, i) => {
+    allSavedDocs = [...allSavedDocs, value];
   });
 
+  const docs = allSavedDocs
+    .map((it) => it?.currentDoc)
+    .filter((it) => Boolean(it)) as Array<Doc>;
   Logger.info(`(getAllDocuments), :num of docs: ${docs.length}`);
   return docs;
 };
 
 const setAuth = async (token: string) => {
-  localforage.setItem("auth", token);
+  localStorage.setItem("auth", token);
   Logger.info("LocalStorageAPI, (setAuth)");
 };
 
@@ -66,6 +74,14 @@ const getAuth = (): string | null => {
 
 const removeAuth = (): void => {
   localStorage.removeItem("auth");
+};
+
+export const checkIsSynced = (
+  props: LocalStorageDoc | null
+): boolean | null => {
+  if (props === null) return null;
+  const { currentDoc, lastSyncedDoc } = props;
+  return compareDocs(currentDoc, lastSyncedDoc);
 };
 
 export const LocalStorageAPI = {
@@ -78,3 +94,5 @@ export const LocalStorageAPI = {
   setAuth,
   removeAuth,
 };
+
+export const Forage = localforage;

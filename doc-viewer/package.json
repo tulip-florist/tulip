@@ -16,16 +16,19 @@
     "deep-equal": "^2.0.5",
     "epubjs": "^0.3.90",
     "localforage": "^1.10.0",
+    "localforage-observable": "^2.1.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-dropzone": "^11.4.2",
     "react-pdf-highlighter": "^5.2.0",
     "react-scripts": "4.0.3",
     "react-split": "^2.0.13",
+    "rxjs": "^7.4.0",
     "typescript": "^4.4.3",
     "uuid": "^8.3.2",
     "web-vitals": "^1.1.2",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "zen-observable": "^0.8.15"
   },
   "scripts": {
     "start": "craco start",
@@ -74,6 +77,7 @@
     "@types/deep-equal": "^1.0.1",
     "@types/underscore": "^1.11.3",
     "@types/uuid": "^8.3.1",
+    "@types/zen-observable": "^0.8.3",
     "autoprefixer": "^9.8.7",
     "postcss": "^7.0.38",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.16"

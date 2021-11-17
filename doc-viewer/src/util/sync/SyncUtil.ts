@@ -1,8 +1,8 @@
-import { compareDocs, mergeDocs } from ".";
-import { Doc } from "../types/types";
-import { LocalStorageAPI } from "./LocalStorageAPI";
-import { Logger } from "./logging";
-import * as API from "./api"
+import { compareDocs, mergeDocs } from "..";
+import { Doc } from "../../types/types";
+import { LocalStorageAPI } from "../LocalStorageAPI";
+import { Logger } from "../logging";
+import * as API from "../api"
 
 const syncDocWithBackend = async (doc: Doc): Promise<Doc> => {
     let ancestor = await LocalStorageAPI.getSyncedVersionOfDocument(doc.documentHash);
@@ -18,9 +18,9 @@ const syncDocWithBackend = async (doc: Doc): Promise<Doc> => {
     Logger.info(
       "(syncDocWithBackend),:set local and server version to merged doc",
       { numAnnotations: mergedDoc.annotations.length }
-    );
-    LocalStorageAPI.setDocument(mergedDoc);
-    LocalStorageAPI.setSyncedVersionOfDocument(mergedDoc);
+      );
+    await LocalStorageAPI.setDocument(mergedDoc);
+    await LocalStorageAPI.setSyncedVersionOfDocument(mergedDoc);
     return mergedDoc;
   };
 

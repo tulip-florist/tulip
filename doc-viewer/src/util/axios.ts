@@ -9,7 +9,7 @@ const axios = Axios.create({
 });
 
 axios.interceptors.request.use((config) => {
-  const localAuth = LocalStorageAPI.getAuth()
+  const localAuth = LocalStorageAPI.getAuth();
 
   if (localAuth && config.headers) {
     config.headers.Authorization = `Bearer ${localAuth}`;
@@ -21,9 +21,9 @@ axios.interceptors.request.use((config) => {
 axios.interceptors.response.use((res) => {
   const auth = res.headers["authorization"];
   if (auth) {
-    const localAuth = LocalStorageAPI.getAuth()
+    const localAuth = LocalStorageAPI.getAuth();
     if (localAuth !== auth) {
-      LocalStorageAPI.setAuth(auth)
+      LocalStorageAPI.setAuth(auth);
     }
   }
   return res;

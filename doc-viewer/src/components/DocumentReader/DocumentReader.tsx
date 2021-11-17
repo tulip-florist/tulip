@@ -26,7 +26,8 @@ import { useInitialMount } from "../../hooks/useIsInitialMount";
 import { annotationsReducer } from "../../util/reducers";
 import { defaultSplitPaneProps } from "../../util/split";
 import { LocalStorageAPI } from "../../util/LocalStorageAPI";
-import { SyncUtil } from "../../util/SyncUtil";
+import { SyncUtil } from "../../util/sync/SyncUtil";
+import { useIsDocSynced } from "../../hooks/useIsDocSynced";
 interface Props {
   fileWithHash: FileWithHash;
   user: User | null;
@@ -48,6 +49,9 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
   const { file, fileHash } = fileWithHash;
   const isInitialMount = useInitialMount();
   const SYNC_DEBOUNCE_TIME = 1000; //ms
+  const [loadedStateFromLS, setLoadedStateFromLS] = useState(false);
+
+  const isSynced = useIsDocSynced(fileWithHash.fileHash);
 
   const [focusAnnotationInputInList, setFocusAnnotationInputInList] = useState<
     ((id: AnnotationType["id"]) => void) | undefined
@@ -59,34 +63,17 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
 
   // Get data for the file from local storage
   useEffect(() => {
-    LocalStorageAPI.getDocument(fileHash).then((doc) => {
+    (async () => {
+      const doc = await LocalStorageAPI.getDocument(fileHash);
       if (doc) {
         dispatch({
           type: ActionTypes.SET_ANNOTATIONS,
           payload: { annotations: doc.annotations },
         });
       }
-    });
+      setLoadedStateFromLS(true);
+    })();
   }, [fileHash]);
-
-  // // On user login, sync data from server
-  // useEffect(() => {
-  //   (async () => {
-  //     if (!user) return;
-
-  //     const syncedDoc = SyncUtil.syncDocWithBackend({documentHash: fileHash, annotations})
-
-  //     // const doc = await API.getDocument(fileHash);
-
-  //     // if (doc?.annotations) {
-  //     //   // sync backend to frontend
-  //     //   dispatch({
-  //     //     type: ActionTypes.SET_ANNOTATIONS,
-  //     //     payload: { annotations: doc.annotations },
-  //     //   });
-  //     // }
-  //   })();
-  // }, [user, fileHash]);
 
   const syncServerDebounce = useMemo(() => {
     const sync = (annotations: any, fileHash: any) => {
@@ -109,27 +96,33 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
 
   // Sync data when annotations change (with debounce)
   useEffect(() => {
-    if (isInitialMount) return;
-    const currentDoc: Doc = { documentHash: fileHash, annotations };
-
-    // First, save app state to local storage
-    LocalStorageAPI.setDocument(currentDoc);
-    // Check if user exists, else return
-    if (!user) return;
-
-    // If lastSynced is the same as the current app state, do nothing
     (async () => {
+      if (isInitialMount || !loadedStateFromLS) return;
+
+      const currentDoc: Doc = { documentHash: fileHash, annotations };
+
+      // First, save app state to local storage
+      await LocalStorageAPI.setDocument(currentDoc);
+      // Check if user exists, else return
+      if (!user) return;
+
+      // If lastSynced is the same as the current app state, do nothing
       const lastSyncedDoc = await LocalStorageAPI.getSyncedVersionOfDocument(
         fileHash
       );
       const docsAreSame = compareDocs(currentDoc, lastSyncedDoc || undefined);
-
       if (docsAreSame) return;
-
       // Else, merge the 3 states, update lastSynced, return the merged object and update the app state
       syncServerDebounce(annotations, fileHash);
     })();
-  }, [annotations, fileHash, isInitialMount, syncServerDebounce, user]);
+  }, [
+    annotations,
+    fileHash,
+    isInitialMount,
+    loadedStateFromLS,
+    syncServerDebounce,
+    user,
+  ]);
 
   const [
     scrollToHighlightInDocument,
@@ -232,6 +225,8 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
           )}
         </div>
         <div className="h-full w-full overflow-y-scroll pt-2">
+          <p>isSynced: {String(isSynced)}</p>
+
           <AnnotationList
             annotations={annotations.sort(
               getFileType(file) === FileTypes.epub

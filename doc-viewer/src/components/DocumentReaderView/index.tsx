@@ -12,14 +12,11 @@ import { EmailLoginRegister } from "../EmailLoginRegister";
 import { useUserLogout } from "../../hooks";
 import { useDropzone } from "react-dropzone";
 import { LocalStorageAPI } from "../../util/LocalStorageAPI";
-import { useSyncAllLocalStorageDocsWithServer } from "../../hooks/useSyncAllLocalStorageDocsWithServer";
 
 export const DocumentReaderView = () => {
   const [fileWithHash, setFileWithHash] = useState<FileWithHash | null>(null);
   const { user, setUser } = useContext(UserContext);
   const handleLogout = useUserLogout();
-
-  useSyncAllLocalStorageDocsWithServer();
 
   const onDrop = useCallback(async (files) => {
     const file = files?.[0] || null;
