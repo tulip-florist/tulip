@@ -28,6 +28,7 @@ import { defaultSplitPaneProps } from "../../util/split";
 import { LocalStorageAPI } from "../../util/LocalStorageAPI";
 import { SyncUtil } from "../../util/sync/SyncUtil";
 import { useIsDocSynced } from "../../hooks/useIsDocSynced";
+import { SyncStatus } from "../SyncStatus";
 interface Props {
   fileWithHash: FileWithHash;
   user: User | null;
@@ -224,8 +225,10 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
             />
           )}
         </div>
-        <div className="h-full w-full overflow-y-scroll pt-2">
-          <p>isSynced: {String(isSynced)}</p>
+        <div className="h-full w-full overflow-y-scroll">
+          <div className="p-0.5 top-0 sticky bg-white flex justify-center">
+            <SyncStatus status={isSynced} />
+          </div>
 
           <AnnotationList
             annotations={annotations.sort(
