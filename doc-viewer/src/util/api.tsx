@@ -37,8 +37,7 @@ export const emailLogin = async ({
 export const getDocument = async (
   documentHash: Doc["documentHash"]
 ): Promise<Doc | null> => {
-  const res = await axios.get("/document/getByHash", {
-    params: { documentHash },
+  const res = await axios.get(`/documents/${documentHash}`, {
     validateStatus: function (status) {
       return (status >= 200 && status < 300) || status === 404;
     },
@@ -47,7 +46,7 @@ export const getDocument = async (
 };
 
 export const setDocument = async (document: Doc) => {
-  await axios.put("/document/setByHash", {
+  await axios.put(`documents/${document.documentHash}`, {
     document,
   });
 };
