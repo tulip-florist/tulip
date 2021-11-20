@@ -33,7 +33,7 @@ export const emailLogin = async ({
 }: {
   email: string;
   password: string;
-}): Promise<User> => {
+}): Promise<void> => {
   const res = await axios.post(
     "/auth/emailSignin",
     { email, password },
@@ -46,10 +46,6 @@ export const emailLogin = async ({
   if (res.status === 401) {
     throw new Error("Invalid email or password");
   }
-  const user: User = {
-    id: res.data.userId,
-  };
-  return user;
 };
 
 export const getDocument = async (

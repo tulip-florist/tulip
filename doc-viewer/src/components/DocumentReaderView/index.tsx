@@ -69,8 +69,9 @@ export const DocumentReaderView = () => {
     password: string;
   }) => {
     try {
-      const user = await API.emailLogin(payload);
-      setUser(user);
+      await API.emailLogin(payload);
+      const fetchedUser = await API.getUser();
+      setUser(fetchedUser);
     } catch (error) {
       showErrorToast((error as Error).message);
     }

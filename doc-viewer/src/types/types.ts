@@ -6,10 +6,9 @@ export interface Annotation {
   position: any;
 }
 
-
 export enum FileTypes {
   pdf = "application/pdf",
-  epub = "application/epub+zip"
+  epub = "application/epub+zip",
 }
 
 export enum ReaderType {
@@ -22,7 +21,7 @@ export enum ActionTypes {
   DELETE_ANNOTATION = "DELETE_ANNOTATION",
   UPDATE_ANNOTATION = "UPDATE_ANNOTATION",
   SET_ANNOTATIONS = "SET_ANNOTATION",
-  CLEAR_ANNOTATIONS = "CLEAR_ANNOTATIONS"
+  CLEAR_ANNOTATIONS = "CLEAR_ANNOTATIONS",
 }
 
 export type Action =
@@ -43,11 +42,12 @@ export type Action =
       payload: { annotations: Array<Annotation> };
     }
   | {
-    type: ActionTypes.CLEAR_ANNOTATIONS
-  }
+      type: ActionTypes.CLEAR_ANNOTATIONS;
+    };
 
 export interface User {
   id: string;
+  email?: string;
 }
 
 export interface Doc {
