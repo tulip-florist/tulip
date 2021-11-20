@@ -12,6 +12,7 @@ import { EmailLoginRegister } from "../EmailLoginRegister";
 import { useUserLogout } from "../../hooks";
 import { useDropzone } from "react-dropzone";
 import { LocalStorageAPI } from "../../util/LocalStorageAPI";
+import { toast } from "react-toastify";
 
 export const DocumentReaderView = () => {
   const [fileWithHash, setFileWithHash] = useState<FileWithHash | null>(null);
@@ -59,7 +60,7 @@ export const DocumentReaderView = () => {
       await API.emailRegister(payload);
       handleEmailLogin(payload);
     } catch (error) {
-      console.log(error);
+      showErrorToast((error as Error).message);
     }
   };
 
@@ -67,8 +68,24 @@ export const DocumentReaderView = () => {
     email: string;
     password: string;
   }) => {
-    const user = await API.emailLogin(payload);
-    setUser(user);
+    try {
+      const user = await API.emailLogin(payload);
+      setUser(user);
+    } catch (error) {
+      showErrorToast((error as Error).message);
+    }
+  };
+
+  const showErrorToast = (message: string) => {
+    toast.error(message, {
+      position: "top-center",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
   };
 
   return (

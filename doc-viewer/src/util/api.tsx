@@ -13,10 +13,17 @@ export const emailRegister = async ({
   email: string;
   password: string;
 }): Promise<void> => {
-  try {
-    await axios.post("/auth/emailSignup", { email, password });
-  } catch (error) {
-    console.log((error as Error).message);
+  const response = await axios.post(
+    "/auth/emailSignup",
+    { email, password },
+    {
+      validateStatus: (status) => {
+        return (status >= 200 && status < 300) || status === 409;
+      },
+    }
+  );
+  if (response.status === 409) {
+    throw new Error("Email already registered!");
   }
 };
 
@@ -27,7 +34,18 @@ export const emailLogin = async ({
   email: string;
   password: string;
 }): Promise<User> => {
-  const res = await axios.post("/auth/emailSignin", { email, password });
+  const res = await axios.post(
+    "/auth/emailSignin",
+    { email, password },
+    {
+      validateStatus: (status) => {
+        return (status >= 200 && status < 300) || status === 401;
+      },
+    }
+  );
+  if (res.status === 401) {
+    throw new Error("Invalid email or password");
+  }
   const user: User = {
     id: res.data.userId,
   };

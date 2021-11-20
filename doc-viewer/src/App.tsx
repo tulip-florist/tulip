@@ -1,6 +1,8 @@
 import React, { createContext, useState } from "react";
 import { DocumentReaderView } from "./components/DocumentReaderView";
 import { User } from "./types/types";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface IUserContext {
   user: User | null;
@@ -21,6 +23,17 @@ const App = () => {
       <UserContext.Provider value={{ user, setUser: (user) => setUser(user) }}>
         <DocumentReaderView />
       </UserContext.Provider>
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 };
