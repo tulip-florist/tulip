@@ -2,6 +2,8 @@
 
 > Open source document reader
 
+Video showing all the features of the application can be found [here](https://www.loom.com/share/de36358b3d624c4689de1cf891764ff8).
+
 ## Development setup
 
 Local development setup for the Tulip (frontend) application.
@@ -30,3 +32,25 @@ Run the application
 Or run storybook
 
     npm run storybook
+
+## Architecture & CI/CD Pipelines
+
+### Simplified Data Flow
+
+![](./documentation/images/simplified_data_flow.jpg)
+
+### Detailed Data Flow
+
+![](./documentation/images/data_flow.jpeg)
+
+### Component structure
+
+![](documentation/images/component_structure.jpg)
+
+### Simplified CI/CD Pipelines flow
+
+![](./documentation/images/simplified_CICD.jpeg)
+
+### Detailed Architecture & CI/CD Pipelines
+
+![](./documentation/images/architecture_and_CICD.jpeg)
