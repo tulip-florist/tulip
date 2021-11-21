@@ -103,8 +103,8 @@ export default function EpubReader({
   );
 
   const removeHighlightInDoc = useCallback(
-    (cifRange: string) => {
-      rendition?.annotations.remove(cifRange, "highlight");
+    (annotation: EpubAnnotation) => {
+      rendition?.annotations.remove(annotation.position.cfiRange, "highlight");
     },
     [rendition]
   );
@@ -238,17 +238,27 @@ export default function EpubReader({
     handleKeyUp,
   ]);
 
+  const clearRenditionAnnotations = useCallback(
+    (rendition: Rendition, annotations: Array<EpubAnnotation>) => {
+      if (!rendition) return;
+      annotations.forEach(removeHighlightInDoc);
+
+      // @ts-ignore
+      rendition.annotations._annotationsBySectionIndex = {};
+    },
+    [removeHighlightInDoc]
+  );
+
   useEffect(() => {
-    annotations.forEach((annotation) => {
-      createHighlightInDoc(annotation);
-    });
+    if (!rendition) return;
+    clearRenditionAnnotations(rendition, annotations);
+    annotations.forEach(createHighlightInDoc);
 
     return () => {
-      annotations.forEach((annotation) => {
-        removeHighlightInDoc(annotation.position.cfiRange);
-      });
+      if (!rendition) return;
+      clearRenditionAnnotations(rendition, annotations);
     };
-  }, [annotations, removeHighlightInDoc, createHighlightInDoc]);
+  }, [annotations, clearRenditionAnnotations, createHighlightInDoc, rendition]);
 
   return (
     <div className="h-full w-full flex flex-col relative">
