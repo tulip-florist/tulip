@@ -2,7 +2,14 @@ import { Doc, User } from "../types/types";
 import axios from "./axios";
 
 export const getUser = async (): Promise<User> => {
-  const res = await axios.get("/auth/me");
+  const res = await axios.get("/auth/me", {
+    validateStatus: (status) => {
+      return (status >= 200 && status < 300) || status === 401;
+    },
+  });
+  if (res.status === 401) {
+    throw new Error("Session expired, please login again");
+  }
   return res.data.user;
 };
 

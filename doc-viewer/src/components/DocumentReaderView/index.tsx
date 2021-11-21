@@ -36,8 +36,12 @@ export const DocumentReaderView = () => {
         Logger.info(
           "DocumentReaderView,(useEffect),:fetching user from local jwt"
         );
-        const fetchedUser = await API.getUser();
-        setUser(fetchedUser);
+        try {
+          const fetchedUser = await API.getUser();
+          setUser(fetchedUser);
+        } catch (error) {
+          showErrorToast((error as Error).message);
+        }
       }
     })();
   }, [setUser, user]);
