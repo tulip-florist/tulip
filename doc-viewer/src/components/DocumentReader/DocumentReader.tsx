@@ -4,6 +4,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useContext,
 } from "react";
 import {
   FileTypes,
@@ -29,6 +30,10 @@ import { LocalStorageAPI } from "../../util/LocalStorageAPI";
 import { SyncUtil } from "../../util/sync/SyncUtil";
 import { useIsDocSynced } from "../../hooks/useIsDocSynced";
 import { SyncStatus } from "../SyncStatus";
+import { toast } from "react-toastify";
+import { UserContext } from "../../App";
+import { toastConfig } from "../../util/toast";
+
 interface Props {
   fileWithHash: FileWithHash;
   user: User | null;
@@ -51,6 +56,7 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
   const isInitialMount = useInitialMount();
   const SYNC_DEBOUNCE_TIME = 1000; //ms
   const [loadedStateFromLS, setLoadedStateFromLS] = useState(false);
+  const { setUser } = useContext(UserContext);
 
   const isSynced = useIsDocSynced(fileWithHash.fileHash);
 
@@ -79,15 +85,21 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
   const syncServerDebounce = useMemo(() => {
     const sync = (annotations: any, fileHash: any) => {
       const currentDoc: Doc = { documentHash: fileHash, annotations };
-      SyncUtil.syncDocWithBackend(currentDoc).then((syncedDoc) => {
-        dispatch({
-          type: ActionTypes.SET_ANNOTATIONS,
-          payload: { annotations: syncedDoc.annotations },
+      SyncUtil.syncDocWithBackend(currentDoc)
+        .then((syncedDoc) => {
+          dispatch({
+            type: ActionTypes.SET_ANNOTATIONS,
+            payload: { annotations: syncedDoc.annotations },
+          });
+        })
+        .catch(async (syncError) => {
+          // unable to refresh token
+          toast.error("Session expired, please login again", toastConfig);
+          setUser(null);
         });
-      });
     };
     return debounce(sync, SYNC_DEBOUNCE_TIME);
-  }, []);
+  }, [setUser]);
 
   useEffect(() => {
     return () => {

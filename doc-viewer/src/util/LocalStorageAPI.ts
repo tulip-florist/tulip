@@ -63,19 +63,6 @@ const getAllDocuments = async (): Promise<Array<Doc>> => {
   return docs;
 };
 
-const setAuth = async (token: string) => {
-  localStorage.setItem("auth", token);
-  Logger.info("LocalStorageAPI, (setAuth)");
-};
-
-const getAuth = (): string | null => {
-  return localStorage.getItem("auth");
-};
-
-const removeAuth = (): void => {
-  localStorage.removeItem("auth");
-};
-
 export const checkIsSynced = (
   props: LocalStorageDoc | null
 ): boolean | null => {
@@ -90,9 +77,6 @@ export const LocalStorageAPI = {
   getSyncedVersionOfDocument,
   setSyncedVersionOfDocument,
   getAllDocuments,
-  getAuth,
-  setAuth,
-  removeAuth,
 };
 
 export const Forage = localforage;

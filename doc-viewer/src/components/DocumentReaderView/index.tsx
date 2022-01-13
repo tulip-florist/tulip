@@ -5,19 +5,16 @@ import { getFileHash } from "../../util";
 import * as API from "../../util/api";
 import { UserContext } from "../../App";
 import { FileWithHash } from "../../types/types";
-import { Logger } from "../../util/logging";
 import { NavBar } from "../NavBar";
 import { UserProfile } from "../UserProfile";
 import { EmailLoginRegister } from "../EmailLoginRegister";
-import { useUserLogout } from "../../hooks";
 import { useDropzone } from "react-dropzone";
-import { LocalStorageAPI } from "../../util/LocalStorageAPI";
 import { toast } from "react-toastify";
+import { toastConfig } from "../../util/toast";
 
 export const DocumentReaderView = () => {
   const [fileWithHash, setFileWithHash] = useState<FileWithHash | null>(null);
   const { user, setUser } = useContext(UserContext);
-  const handleLogout = useUserLogout();
 
   const onDrop = useCallback(async (files) => {
     const file = files?.[0] || null;
@@ -27,20 +24,21 @@ export const DocumentReaderView = () => {
   }, []);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
-  // If JWT in local storage, get and set user
   useEffect(() => {
     (async () => {
-      const jwt = await LocalStorageAPI.getAuth();
-
-      if (jwt && !user) {
-        Logger.info(
-          "DocumentReaderView,(useEffect),:fetching user from local jwt"
-        );
-        try {
+      try {
+        if (!user) {
           const fetchedUser = await API.getUser();
           setUser(fetchedUser);
-        } catch (error) {
-          showErrorToast((error as Error).message);
+        }
+      } catch (error) {
+        const err = error as Error;
+        if (
+          err.message === "refresh_token reused" ||
+          err.message === "refresh_token expired"
+        ) {
+          toast.error("Sesion expired, please login again", toastConfig);
+          setUser(null);
         }
       }
     })();
@@ -64,7 +62,7 @@ export const DocumentReaderView = () => {
       await API.emailRegister(payload);
       handleEmailLogin(payload);
     } catch (error) {
-      showErrorToast((error as Error).message);
+      toast.error((error as Error).message, toastConfig);
     }
   };
 
@@ -77,20 +75,19 @@ export const DocumentReaderView = () => {
       const fetchedUser = await API.getUser();
       setUser(fetchedUser);
     } catch (error) {
-      showErrorToast((error as Error).message);
+      toast.error((error as Error).message, toastConfig);
     }
   };
 
-  const showErrorToast = (message: string) => {
-    toast.error(message, {
-      position: "top-center",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    });
+  const handleLogout = async () => {
+    try {
+      await API.logOut();
+    } catch (error) {
+      // can't handle these type of errors here (see backend)
+    } finally {
+      setUser(null);
+      toast.success("Successfully logged out", toastConfig);
+    }
   };
 
   return (
