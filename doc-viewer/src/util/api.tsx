@@ -31,7 +31,7 @@ export const emailLogin = async ({
   password: string;
 }): Promise<void> => {
   await axios.post("/auth/emailLogin", { email, password }).catch((error) => {
-    if (error.response.status === 403 || error.response.status === 404) {
+    if (error.response.status === 401) {
       throw new Error("Invalid email or password");
     }
   });

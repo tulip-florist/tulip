@@ -32,7 +32,11 @@ axios.interceptors.response.use(
         }
       }
 
-      if (!originalConfig._retry && (errStatus === 401 || errStatus === 400)) {
+      if (
+        !originalConfig._retry &&
+        (errStatus === 401 || errStatus === 400) &&
+        errUrl !== "/auth/emailLogin"
+      ) {
         originalConfig._retry = true;
         try {
           await refreshToken();
