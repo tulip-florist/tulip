@@ -59,3 +59,8 @@ export interface FileWithHash {
   file: File;
   fileHash: string;
 }
+
+export interface AuthFormValues {
+  email: string;
+  password: string;
+}

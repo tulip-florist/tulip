@@ -17,9 +17,14 @@ export const emailRegister = async ({
   await axios
     .post("/auth/emailRegister", { email, password })
     .catch((error) => {
-      if (error.response.status === 409) {
-        throw new Error("Email already registered!");
+      if (error.response && error.response.status) {
+        const resStatus = error.response.status;
+        if (resStatus === 409 || resStatus === 400) {
+          const errMsg = error.response.data.errors[0].message;
+          throw new Error(errMsg);
+        }
       }
+      throw error;
     });
 };
 
@@ -31,8 +36,12 @@ export const emailLogin = async ({
   password: string;
 }): Promise<void> => {
   await axios.post("/auth/emailLogin", { email, password }).catch((error) => {
-    if (error.response.status === 401) {
-      throw new Error("Invalid email or password");
+    if (error.response && error.response.status) {
+      const resStatus = error.response.status;
+      if (resStatus === 401 || resStatus === 400) {
+        const errMsg = error.response.data.errors[0].message;
+        throw new Error(errMsg);
+      }
     }
   });
 };

@@ -90,6 +90,10 @@ export const DocumentReaderView = () => {
     }
   };
 
+  const handleSubmitError = (args: { toastMessage: JSX.Element }) => {
+    toast.warn(args.toastMessage, toastConfig);
+  };
+
   return (
     <div className="h-full w-full flex flex-col">
       <div className="w-full flex-initial">
@@ -110,6 +114,7 @@ export const DocumentReaderView = () => {
                 <EmailLoginRegister
                   onLogin={handleEmailLogin}
                   onRegister={handleEmailRegister}
+                  onSubmitError={handleSubmitError}
                 />
               )}
             </div>

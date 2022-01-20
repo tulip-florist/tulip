@@ -1,8 +1,7 @@
 import { FileTypes, Annotation, Doc } from "../types/types";
 import equal from "deep-equal";
-import * as API from "./api";
 import { Logger } from "./logging";
-import { isEqual, sortBy } from "lodash";
+import { isEqual } from "lodash";
 
 export const getFileHash = async (file: File) => {
   // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#converting_a_digest_to_a_hex_string
