@@ -253,7 +253,7 @@ export const DocumentReader = ({ fileWithHash, user }: Props) => {
           >
             {({ annotation, containerRef, inputRef }) => {
               return (
-                <div className="pr-1.5 ..." key={annotation.id}>
+                <div className="pr-1.5 py-1 ..." key={annotation.id}>
                   <AnnotationMemo
                     highlight={annotation.highlight}
                     note={annotation.note}
