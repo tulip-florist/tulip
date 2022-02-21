@@ -18,7 +18,7 @@ Install the dependencies
 
     npm install
 
-(Optinal) Create a `.env` file with the following variables to connect to the backend (Find setup of backend [here](https://github.com/tulip-florist/tulip-backend))
+(Optional) Create a `.env` file with the following variables to connect to the backend (Find setup of backend [here](https://github.com/tulip-florist/tulip-backend))
 
 ```
 REACT_APP_NODE_ENV=development
